@@ -1,0 +1,45 @@
+# Example config file for Nanotec Drives
+Nanotec:
+  config_run_sdo_verify_timeout: 150000
+  drive_state_change_min_timeout: 2000
+  drive_state_change_max_timeout: 1000000
+  min_number_of_successful_target_state_readings: 50
+  interpolation_time_period_ms: 1 # Leave this to >= 1, never set it to 0
+
+Reading:
+  force_append_equal_error: true
+  force_append_equal_fault: false
+  error_storage_capacity: 100
+  fault_storage_capacity: 100
+
+Hardware:
+  mode_of_operation:
+    - CyclicSynchronousPositionMode
+  pole_pairs: 50
+  max_motor_current_mA: 3000
+  rated_current_mA: 2500
+  max_motor_speed: 1800
+  max_current_percentage: 1000 # percent value * 10
+  i2t_max_duration_of_peak_ms: 100 # 100 is recommended
+  clock_direction_multiplier: 16 # 128 = quarter step/pulse (800 steps/rev), 512 = normal step/pulse (200 steps/rev)
+  clock_direction_divider: 1
+  limit_switch_negative_en: false
+  limit_switch_positive_en: false
+  limit_switch_homing_en: false
+  position_unit: 4282449920 # 0xFF41000 for tenths of a degree, 3600 = 1 full mechanical rev
+  speed_unit: 11814656 # 0x00B44700 for rpm
+
+AutoSetup:
+  auto_setup_en: true
+  auto_setup_timeout_ms: 30000
+
+Homing:
+  homing_en: true
+  home_offset: 0
+  homing_method: -17
+  homing_speed_zero_search: 50 #5deg/s
+  homing_speed_switch_search: 50 #5deg/s
+  homing_acceleration: 100
+  minimum_current_for_block_detection_mA: 1200
+  period_of_blocking_ms: 200
+  homing_timeout_ms: 60000
