@@ -167,7 +167,7 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
                             device_ptr_->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
                     {
                         // @todo: make mode of operation configurable
-                        command.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                        staged_command_ptr_->setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode);
 
                         reading_msg_.header.stamp = ros::Time::now();
                         reading_msg_.actualPosition = device_ptr_->getReading().getActualPositionRaw();
@@ -193,7 +193,7 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
                             device_ptr_->getReading().getDriveState() == nanotec::DriveState::OperationEnabled)
                     {
                         // @todo: make mode of operation configurable
-                        command.setModeOfOperation(nanotec::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                        staged_command_ptr_->setModeOfOperation(nanotec::ModeOfOperationEnum::CyclicSynchronousPositionMode);
 
                         reading_msg_.header.stamp = ros::Time::now();
                         reading_msg_.actualPosition = device_ptr_->getReading().getActualPositionRaw();
@@ -205,8 +205,8 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
                     }
                     else
                     {
-                        MELO_WARN_STREAM("Nanotec '" << nanotec_slave_ptr->getName()
-                                                                            << "': " << nanotec_slave_ptr->getReading().getDriveState());
+                        MELO_WARN_STREAM("Nanotec '" << device_ptr_->getName()
+                                                                            << "': " << device_ptr_->getReading().getDriveState());
                     }
                 }
                 else{
