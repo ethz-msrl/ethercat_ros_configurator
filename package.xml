@@ -49,7 +49,12 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-
+  <!-->
+      Optional dependencies.
+      Any single drive sdk or any combination of sdks may be used.
+  <-->
+  <depend>maxon_epos_ethercat_sdk</depend>
+  <depend>nanotec_ethercat_sdk</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

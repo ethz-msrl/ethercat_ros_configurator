@@ -17,9 +17,13 @@
 #include <memory>
 #include <string>
 #include <ethercat_sdk_master/EthercatMaster.hpp>
+#include <ethercat_ros_configurator/EthercatDeviceRos.hpp>
 #include <type_traits>
 
 namespace EthercatRos{
+
+typedef EthercatDeviceRos<maxon::Maxon, maxon::Command> MaxonDeviceRos;
+typedef EthercatDeviceRos<nanotec::Nanotec, nanotec::Command> NanotecDeviceRos;
 
 class EthercatDeviceConfigurator
 {
@@ -28,26 +32,7 @@ public:
     typedef std::shared_ptr<EthercatDeviceConfigurator> SharedPtr ;
 
     //Type ethercat slave device. If you want to wire in a new slave device type, add an entry to this enum
-    enum class EthercatSlaveType
-    {
-        Elmo,
-        Maxon,
-        Anydrive,
-        Rokubi,
-        Nanotec,
-        NA
-    };
 
-    struct EthercatSlaveEntry
-    {
-        EthercatSlaveType type;
-        std::string name;
-        std::string config_file_path;
-
-        uint32_t ethercat_address;
-        std::string ethercat_bus;
-        std::string ethercat_pdo_type;
-    };
     /**
      * @brief EthercatDeviceConfigurator
      * @param path - path to the setup.yaml
@@ -63,19 +48,19 @@ public:
      * @brief getSlaves
      * @return a vector of all slaves
      */
-    std::vector<std::shared_ptr<ecat_master::EthercatDevice>> getSlaves();
+    std::vector<std::shared_ptr<EthercatDeviceRosBase>> getSlaves();
     /**
      * @brief getSlave - get a certain slave by its name
      * @param name
      * @return shared_ptr on slave
      */
-    std::shared_ptr<ecat_master::EthercatDevice> getSlave(std::string name);
+    std::shared_ptr<EthercatDeviceRosBase> getSlave(std::string name);
     /**
      * @brief getInfoForSlave
      * @param slave - shared ptr on slave
      * @return Info entry parsed from setup.yaml
      */
-    const EthercatSlaveEntry& getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDevice>& slave);
+    const EthercatSlaveEntry& getInfoForSlave(const std::shared_ptr<EthercatDeviceRosBase>& slave);
     /**
      * @brief master
      * @return pointer on master if only a single master is available
@@ -89,26 +74,9 @@ public:
      */
     const std::string& getSetupFilePath();
 
-    /**
-     * @brief getSlavesOfType - return all slaves of type T (vector of shared_ptr).
-     * @note Warning cache the result if you need them on a regular base. Might have bad performance
-     */
-    template<typename T, typename dummy = std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDevice, T>>>
-    std::vector<std::shared_ptr<T>> getSlavesOfType()
-    {
+    std::shared_ptr<ros::NodeHandle> getNodeHandle();
 
-        std::vector<std::shared_ptr<T>> slaves;
 
-        for(auto & slave: m_slaves)
-        {
-            auto ptr = std::dynamic_pointer_cast<T>(slave);
-            if(ptr)
-            {
-                slaves.push_back(ptr);
-            }
-        }
-        return slaves;
-    }
 
 private:
     //Stores the general master configuration.
@@ -117,13 +85,14 @@ private:
     //Vector of all configured masters
     std::vector<std::shared_ptr<ecat_master::EthercatMaster>> m_masters;
     //Vecotr of all configured slaves (For all masters)
-    std::vector<std::shared_ptr<ecat_master::EthercatDevice>> m_slaves;
+    std::vector<std::shared_ptr<EthercatDeviceRosBase>> m_slaves;
 
     //List of all parsed slave entries from the setup.yaml
     std::vector<EthercatSlaveEntry> m_slave_entries;
     //Map that helps finding the right slave entry for a certain slave
-    std::map<std::shared_ptr<ecat_master::EthercatDevice>, EthercatSlaveEntry> m_slave_to_entry_map;
-
+    std::map<std::shared_ptr<EthercatDeviceRosBase>, EthercatSlaveEntry> m_slave_to_entry_map;
+    // ROS Nodehandle initialized when then the setup file is found.
+    std::shared_ptr<ros::NodeHandle> m_nh;
 
     /*Internal methods*/
 
@@ -147,6 +116,30 @@ private:
 
     //Path to the setup file
     std::string m_setup_file_path ="";
+    // ROS namespace
+    std::string m_ros_namespace = "";
+
+public:
+    /**
+     * @brief getSlavesOfType - return all slaves of type T (vector of shared_ptr).
+     * @note Warning cache the result if you need them on a regular base. Might have bad performance
+     */
+    template<typename T, typename dummy = std::enable_if_t<std::is_base_of_v<ecat_master::EthercatDevice, T>>>
+    std::vector<std::shared_ptr<T>> getSlaveClassPtrOfType()
+    {
+
+        std::vector<std::shared_ptr<T>> slaves;
+
+        for(auto & slave: m_slaves)
+        {
+            auto ptr = std::dynamic_pointer_cast<T>(slave->getSlaveObjPtr());
+            if(ptr)
+            {
+                slaves.push_back(ptr);
+            }
+        }
+        return slaves;
+    }
 };
 
 } // namespace EthercatROS

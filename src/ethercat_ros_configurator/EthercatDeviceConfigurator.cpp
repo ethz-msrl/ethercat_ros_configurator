@@ -14,30 +14,11 @@
 
 #include "ethercat_ros_configurator/EthercatDeviceConfigurator.hpp"
 
-/*Anydrives*/
-#ifdef _ANYDRIVE_FOUND_
-#include "anydrive/Anydrive.hpp"
-#endif
-
-/*Elmo*/
-#ifdef _ELMO_FOUND_
-#include "elmo_ethercat_sdk/Elmo.hpp"
-#endif
-
 /*Maxon*/
-#ifdef _MAXON_FOUND_
 #include "maxon_epos_ethercat_sdk/Maxon.hpp"
-#endif
-
-/*Bota rokubi and SenseOne sensors*/
-#ifdef _ROKUBI_FOUND_
-#include "rokubimini_rsl_ethercat/RokubiminiEthercat.hpp"
-#endif
 
 /*Nanotec*/
-#ifdef _NANOTEC_FOUND_
 #include "nanotec_ethercat_sdk/Nanotec.hpp"
-#endif
 
 /*yaml-cpp*/
 #include "yaml-cpp/yaml.h"
@@ -74,22 +55,22 @@ std::vector<std::shared_ptr<ecat_master::EthercatMaster> > EthercatDeviceConfigu
     return m_masters;
 }
 
-std::vector<std::shared_ptr<ecat_master::EthercatDevice>> EthercatDeviceConfigurator::getSlaves()
+std::vector<std::shared_ptr<EthercatDeviceRosBase>> EthercatDeviceConfigurator::getSlaves()
 {
     return m_slaves;
 }
 
-std::shared_ptr<ecat_master::EthercatDevice> EthercatDeviceConfigurator::getSlave(std::string name)
+std::shared_ptr<EthercatDeviceRosBase> EthercatDeviceConfigurator::getSlave(std::string name)
 {
     for(auto & slave: m_slaves)
     {
-        if(slave->getName() == name)
+        if(slave->getSlaveObjPtr()->getName() == name)
             return slave;
     }
     throw std::runtime_error("[EthercatDeviceConfigurator] Slave: "+name + " not found");
 }
 
-const EthercatDeviceConfigurator::EthercatSlaveEntry &EthercatDeviceConfigurator::getInfoForSlave(const std::shared_ptr<ecat_master::EthercatDevice> &slave)
+const EthercatSlaveEntry &EthercatDeviceConfigurator::getInfoForSlave(const std::shared_ptr<EthercatDeviceRosBase> &slave)
 {
     return m_slave_to_entry_map[slave];
 }
@@ -139,11 +120,17 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
         {
             throw std::runtime_error("[EthercatDeviceConfigurator] Node update_rate_too_low_warn_threshold missing in ethercat_master");
         }
+        if(ecat_master_node["ros_namespace"]){
+            m_ros_namespace = ecat_master_node["ros_namespace"].as<std::string>();
+        }
     }
     else
     {
         throw std::runtime_error("[EthercatDeviceConfigurator] Node ethercat_master is missing in yaml");
     }
+
+    // Creating the ROS Node Handle
+    m_nh = std::make_shared<ros::NodeHandle>(m_ros_namespace);
 
     //Check if node is ethercat_devices
     if(node["ethercat_devices"])
@@ -163,21 +150,9 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             {
                 auto type_str = child["type"].as<std::string>();
 
-                if(type_str == "Elmo")
-                {
-                    entry.type = EthercatSlaveType::Elmo;
-                }
-                else if(type_str == "Maxon")
+                if(type_str == "Maxon")
                 {
                     entry.type = EthercatSlaveType::Maxon;
-                }
-                else if(type_str == "Anydrive")
-                {
-                    entry.type = EthercatSlaveType::Anydrive;
-                }
-                else if(type_str == "Rokubi")
-                {
-                    entry.type = EthercatSlaveType::Rokubi;
                 }
                 else if(type_str == "Nanotec")
                 {
@@ -233,20 +208,6 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             {
                 throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry ethercat_bus");
             }
-
-            //ethercat_pdo_type - entry
-            if(entry.type == EthercatSlaveType::Anydrive || entry.type == EthercatSlaveType::Rokubi)
-            {
-                if(child["ethercat_pdo_type"])
-                {
-                    entry.ethercat_pdo_type = child["ethercat_pdo_type"].as<std::string>();
-                }
-                else
-                {
-                    throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry ethercat_pdo_type");
-                }
-            }
-
             m_slave_entries.push_back(entry);
         }
     }
@@ -264,117 +225,23 @@ void EthercatDeviceConfigurator::setup(bool startup)
         MELO_DEBUG_STREAM("[EthercatDeviceConfigurator] Creating slave: " << entry.name);
 
         std::shared_ptr<ecat_master::EthercatDevice> slave = nullptr;
+        std::shared_ptr<EthercatDeviceRosBase> slave_ros = nullptr;
 
         switch (entry.type) {
-        case EthercatSlaveType::Elmo:
-        {
-#ifdef _ELMO_FOUND_
-            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-            slave = elmo::Elmo::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
-#else
-            throw std::runtime_error("elmo_ethercat_sdk not availabe.");
-#endif
-
-        }
-            break;
         case EthercatSlaveType::Maxon:
         {
-#ifdef _MAXON_FOUND_
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = maxon::Maxon::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
-#else
-            throw std::runtime_error("maxon_epos_ethercat_sdk not availabe.");
-#endif
-
+            slave_ros = std::make_shared<MaxonDeviceRos>(m_nh, slave, entry);
         }
             break;
         case EthercatSlaveType::Nanotec:
         {
-#ifdef _NANOTEC_FOUND_
             std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             slave = nanotec::Nanotec::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
-#else
-            throw std::runtime_error("nanotec_ethercat_sdk not available");
-#endif
+            slave_ros = std::make_shared<NanotecDeviceRos>(m_nh, slave, entry);
         }
             break;
-        case EthercatSlaveType::Anydrive:
-        {
-#ifdef _ANYDRIVE_FOUND_
-            anydrive::PdoTypeEnum pdo = anydrive::PdoTypeEnum::NA;
-
-            if(entry.ethercat_pdo_type == "A")
-            {
-                pdo = anydrive::PdoTypeEnum::A;
-            }
-            else if (entry.ethercat_pdo_type  == "B")
-            {
-                pdo = anydrive::PdoTypeEnum::B;
-            }
-            else if(entry.ethercat_pdo_type == "C")
-            {
-                pdo = anydrive::PdoTypeEnum::C;
-            }
-            else if(entry.ethercat_pdo_type == "D")
-            {
-                pdo = anydrive::PdoTypeEnum::D;
-            }
-            else if(entry.ethercat_pdo_type == "E")
-            {
-                pdo = anydrive::PdoTypeEnum::E;
-            }
-            else
-            {
-                throw std::runtime_error("[EthercatDeviceConfigurator] PDO unknown: " + entry.ethercat_pdo_type);
-            }
-
-            //handleFilePath takes care of creating an absolute path from the path in the setup.yaml
-            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-            slave = anydrive::AnydriveEthercatSlave::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
-#else
-            throw std::runtime_error("anydrive_ethercat_sdk not available");
-#endif
-        }
-            break;
-
-        case EthercatSlaveType::Rokubi:
-        {
-#ifdef _ROKUBI_FOUND_
-            rokubimini::ethercat::PdoTypeEnum pdo = rokubimini::ethercat::PdoTypeEnum::NA;
-            if(entry.ethercat_pdo_type == "A")
-            {
-                pdo = rokubimini::ethercat::PdoTypeEnum::A;
-            }
-            else if(entry.ethercat_pdo_type == "B")
-            {
-                pdo = rokubimini::ethercat::PdoTypeEnum::B;
-            }
-            else if(entry.ethercat_pdo_type == "C")
-            {
-                pdo = rokubimini::ethercat::PdoTypeEnum::C;
-            }
-            else if(entry.ethercat_pdo_type == "Z")
-            {
-                pdo = rokubimini::ethercat::PdoTypeEnum::Z;
-            }
-            else if(entry.ethercat_pdo_type == "EXTIMU")
-            {
-                pdo = rokubimini::ethercat::PdoTypeEnum::EXTIMU;
-            }
-            else
-            {
-                throw std::runtime_error("[EthercatDeviceConfigurator] PDO unknown: " + entry.ethercat_pdo_type);
-            }
-
-            //Handle configuration file path
-            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-            slave = rokubimini::ethercat::RokubiminiEthercat::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address, pdo);
-#else
-            throw std::runtime_error("rokubimini_ethercat_sdk not available");
-#endif
-        }
-            break;
-
 
         default:
             throw std::runtime_error("[EthercatDeviceConfigurator] Not existing EthercatSlaveType passed");
@@ -382,8 +249,8 @@ void EthercatDeviceConfigurator::setup(bool startup)
 
 
         }
-        m_slaves.push_back(slave);
-        m_slave_to_entry_map.insert({slave, entry});
+        m_slaves.push_back(slave_ros);
+        m_slave_to_entry_map.insert({slave_ros, entry});
     }
 
 
@@ -402,7 +269,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             {
                 master_found = true;
                 //Yes we attach the slave
-                if(!master->attachDevice(slave))
+                if(!master->attachDevice(slave->getSlaveObjPtr()))
                 {
                     throw std::runtime_error("[EthercatDeviceConfigurator] could not attach slave: " + slave->getName() + " to master on interface: " + master->getConfiguration().networkInterface);
                 }
@@ -421,7 +288,7 @@ void EthercatDeviceConfigurator::setup(bool startup)
             m_masters.push_back(master);
 
             //And attach the slave
-            if(!master->attachDevice(slave))
+            if(!master->attachDevice(slave->getSlaveObjPtr()))
             {
                 throw std::runtime_error("[EthercatDeviceConfigurator] could not attach slave: " + slave->getName() + " to master on interface: " + master->getConfiguration().networkInterface);
             }
@@ -471,4 +338,9 @@ std::string EthercatDeviceConfigurator::handleFilePath(const std::string &path, 
     if(!path_exists(result_path))
         throw std::runtime_error("Path: " + result_path + " does not exist");
     return  result_path;
+}
+
+std::shared_ptr<ros::NodeHandle> EthercatDeviceConfigurator::getNodeHandle()
+{
+    return m_nh;
 }

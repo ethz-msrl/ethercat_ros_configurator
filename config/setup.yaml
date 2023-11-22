@@ -1,6 +1,7 @@
 ethercat_master:
   time_step:                          0.0025
   update_rate_too_low_warn_threshold: 50
+  ros_namespace:                      ethercat_master
 
 ethercat_devices:
   - type:               Nanotec
