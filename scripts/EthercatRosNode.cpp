@@ -16,7 +16,6 @@ EthercatRos::EthercatDeviceConfigurator::SharedPtr configurator;
 void worker()
 {
     bool rtSuccess = true;
-    long long int iteration_count = 0;
     for(const auto & master: configurator->getMasters())
     {
         rtSuccess &= master->setRealtimePriority(99);
