@@ -38,11 +38,10 @@ class EthercatDeviceRosBase{
         virtual void joinWorkerThread() = 0;
         virtual std::shared_ptr<ecat_master::EthercatDevice> getSlaveObjPtr() const = 0;
         virtual std::string getName() const = 0;
-    protected:
-        virtual void commandCallback(const ethercat_motor_msgs::MotorCtrlMessage::ConstPtr& msg) = 0;
+        virtual void abort() = 0;
 };
 
-template <class DeviceClass, class DeviceCommandClass>
+template <class DeviceClass>
 /**
  * @brief The EthercatDeviceRos class, provides a ROS interface to an EthercatDevice.
 */
@@ -68,8 +67,8 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
                 nh_ptr_->advertise<ethercat_motor_msgs::MotorStatusMessage>(device_info.name + "/reading", 1000)
                 );
             
-
-            staged_command_ptr_ = std::make_unique<DeviceCommandClass>();
+            last_command_msg_ptr_ = std::make_unique<ethercat_motor_msgs::MotorCtrlMessage>();
+            command_msg_mutex_ptr_ = std::make_unique<std::recursive_mutex>();
 
             device_enabled_ = true;
 
@@ -84,8 +83,11 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
             nh_ptr_ = std::move(other.nh_ptr_);
             command_sub_ptr_ = std::move(other.command_sub_ptr_);
             reading_pub_ptr_ = std::move(other.reading_pub_ptr_);
+            last_command_msg_ptr_ = std::move(other.last_command_msg_ptr_);
+            command_msg_mutex_ptr_ = std::move(other.command_msg_mutex_ptr_);
             worker_thread_ptr_ = std::move(other.worker_thread_ptr_);
-            staged_command_ptr_ = std::move(other.staged_command_ptr_);
+            device_enabled_ = other.device_enabled_;
+            abrt = other.abrt;
             other.device_ptr_ = nullptr;
             other.device_info_ = EthercatSlaveEntry();
         }
@@ -100,8 +102,11 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
             nh_ptr_ = std::move(other.nh_ptr_);
             command_sub_ptr_ = std::move(other.command_sub_ptr_);
             reading_pub_ptr_ = std::move(other.reading_pub_ptr_);
+            last_command_msg_ptr_ = std::move(other.last_command_msg_ptr_);
+            command_msg_mutex_ptr_ = std::move(other.command_msg_mutex_ptr_);
             worker_thread_ptr_ = std::move(other.worker_thread_ptr_);
-            staged_command_ptr_ = std::move(other.staged_command_ptr_);
+            device_enabled_ = other.device_enabled_;
+            abrt = other.abrt;
             other.device_ptr_ = nullptr;
             other.device_info_ = EthercatSlaveEntry();
             return *this;
@@ -120,6 +125,14 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         // we never want multiple copies of same ethercat device.
         EthercatDeviceRos(const EthercatDeviceRos&) = delete;
         EthercatDeviceRos& operator=(const EthercatDeviceRos&) = delete;
+
+        virtual void abort() override {
+            ROS_DEBUG("EthercatDevice %s aborting.", device_info_.name.c_str());
+            while(worker_loop_running_){
+                abrt = true;
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        }
 
         /**
          * @brief startWorkerThread - starts the worker thread
@@ -178,30 +191,38 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
          * @brief commandCallback - callback for the command topic. Updates
          * the staged command of the device used by the worker thread.
         */
-        virtual void commandCallback(const ethercat_motor_msgs::MotorCtrlMessage::ConstPtr& msg) override {
-            ROS_ERROR("EthercatDeviceRos::commandCallback() not implemented for this device type.");
-            staged_command_ptr_->setTargetPositionRaw(msg->targetPosition);
-            staged_command_ptr_->setTargetVelocityRaw(msg->targetVelocity);
-            staged_command_ptr_->setTargetTorqueRaw(msg->targetTorque);
-            staged_command_ptr_->setPositionOffsetRaw(msg->positionOffset);
-            staged_command_ptr_->setTorqueOffsetRaw(msg->torqueOffset);
-            staged_command_ptr_->setVelocityOffsetRaw(msg->velocityOffset);
-            // The following line is only compatible with nanotec and maxon for now.
-            // sync locks are in stageCommand() so none required here.
-            device_ptr_->stageCommand(*staged_command_ptr_);
+        void commandCallback(const ethercat_motor_msgs::MotorCtrlMessage::ConstPtr& msg) {
+            std::lock_guard<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
+            last_command_msg_ptr_->header.stamp = msg->header.stamp;
+            last_command_msg_ptr_->header.frame_id = msg->header.frame_id;
+            last_command_msg_ptr_->header.seq = msg->header.seq;
+            last_command_msg_ptr_->targetPosition = msg->targetPosition;
+            last_command_msg_ptr_->targetVelocity = msg->targetVelocity;
+            last_command_msg_ptr_->targetTorque = msg->targetTorque;
+            last_command_msg_ptr_->positionOffset = msg->positionOffset;
+            last_command_msg_ptr_->velocityOffset = msg->velocityOffset;
+            last_command_msg_ptr_->torqueOffset = msg->torqueOffset;
+            last_command_msg_ptr_->motionProfileType = msg->motionProfileType;
+            last_command_msg_ptr_->timestamp = msg->timestamp;
+            last_command_msg_ptr_->version = msg->version;
+            last_command_msg_ptr_->profileAcceleration = msg->profileAcceleration;
+            last_command_msg_ptr_->profileDeceleration = msg->profileDeceleration;
         }
     
         std::shared_ptr<DeviceClass> device_ptr_; // Shared pointer to slave.
                                          // because Ethercat master needs it too.
-        std::shared_ptr<ros::NodeHandle> nh_ptr_;
-        EthercatSlaveEntry device_info_;
-        std::unique_ptr<ros::Subscriber> command_sub_ptr_;
-        std::unique_ptr<ros::Publisher> reading_pub_ptr_;
-        std::unique_ptr<DeviceCommandClass> staged_command_ptr_;
-        ethercat_motor_msgs::MotorStatusMessage reading_msg_;
-        mutable std::recursive_mutex staged_command_mutex_;
+        std::shared_ptr<ros::NodeHandle> nh_ptr_; // A shared pointer to node handle for pubs and subs
+        EthercatSlaveEntry device_info_; // Slave info
+        std::unique_ptr<ros::Subscriber> command_sub_ptr_; // A unique pointer to command subscriber
+        std::unique_ptr<ros::Publisher> reading_pub_ptr_; // A unique pointer to reading publisher
+        std::unique_ptr<ethercat_motor_msgs::MotorCtrlMessage> last_command_msg_ptr_; // A unique pointer to latest command message received
+        std::unique_ptr<std::recursive_mutex> command_msg_mutex_ptr_; // A unique pointer to mutex for command message callback rw locks
+        ethercat_motor_msgs::MotorStatusMessage reading_msg_; // make this a pointer too?
         bool device_enabled_ = false;
+        bool abrt = false;
+        bool worker_loop_running_ = false;
         uint32_t reading_pub_freq = 100; // Hz
+
         
 };
 
@@ -209,10 +230,10 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
 
 // --------> Maxon
 template <>
-void EthercatDeviceRos<maxon::Maxon, maxon::Command>::worker(){
+void EthercatDeviceRos<maxon::Maxon>::worker(){
     ros::Rate loop_rate(reading_pub_freq);
-    while(true){
-
+    worker_loop_running_ = true;
+    while(!this->abrt){
         if (device_info_.type == EthercatSlaveType::Maxon) {
             if(!device_enabled_){
                 device_ptr_->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
@@ -222,24 +243,42 @@ void EthercatDeviceRos<maxon::Maxon, maxon::Command>::worker(){
             if (device_ptr_->lastPdoStateChangeSuccessful() &&
                     device_ptr_->getReading().getDriveState() == maxon::DriveState::OperationEnabled)
             {
-                // @todo: make mode of operation configurable
-                staged_command_ptr_->setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                // @todo: make mode of operation configurable : Add to last_command_msg_ptr_ smartly
+                // Maybe a map of int to OpModes in different device classes.
 
+                // Initially a pointer to command was maintained, but was removed for uneccessary
+                // template specializations. This should have a slight allocation overhead but compiler
+                // optimizations should reduce it a bit.
+                std::lock_guard<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
+                maxon::Command cmd;
+                cmd.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
+                cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
+                cmd.setTargetTorqueRaw(last_command_msg_ptr_->targetTorque);
+                cmd.setPositionOffsetRaw(last_command_msg_ptr_->positionOffset);
+                cmd.setTorqueOffsetRaw(last_command_msg_ptr_->torqueOffset);
+                cmd.setVelocityOffsetRaw(last_command_msg_ptr_->velocityOffset);
+
+                device_ptr_->stageCommand(cmd);
+
+                maxon::Reading reading;
                 reading_msg_.header.stamp = ros::Time::now();
-                reading_msg_.actualPosition = device_ptr_->getReading().getActualPositionRaw();
-                reading_msg_.actualVelocity = device_ptr_->getReading().getActualVelocityRaw();
-                reading_msg_.statusword = device_ptr_->getReading().getRawStatusword();
-                reading_msg_.analogInput = device_ptr_->getReading().getAnalogInputRaw();
-                reading_msg_.busVoltage = device_ptr_->getReading().getBusVoltageRaw();
-                reading_msg_.actualTorque   = device_ptr_->getReading().getActualCurrent(); // see txPDO defn in maxon's SDK
+                reading_msg_.actualPosition = reading.getActualPositionRaw();
+                reading_msg_.actualVelocity = reading.getActualVelocityRaw();
+                reading_msg_.statusword = reading.getRawStatusword();
+                reading_msg_.analogInput = reading.getAnalogInputRaw();
+                reading_msg_.busVoltage = reading.getBusVoltageRaw();
+                reading_msg_.actualTorque   = reading.getActualCurrent(); // see txPDO defn in maxon's SDK
+                reading_pub_ptr_->publish(reading_msg_);
+                device_enabled_ = true;
             }
             else
             {
+                device_enabled_ = false;
                 MELO_WARN_STREAM("Maxon '" << device_ptr_->getName()
                                                                     << "': " << device_ptr_->getReading().getDriveState());
             }
 
-            reading_pub_ptr_->publish(reading_msg_);
             loop_rate.sleep();
         }
         else{
@@ -247,41 +286,61 @@ void EthercatDeviceRos<maxon::Maxon, maxon::Command>::worker(){
             checkSlaveTypeAvailability();
         }
     }
+    worker_loop_running_ = false;
 }
 // <-------- Maxon
 
 // --------> Nanotec
 template <>
-void EthercatDeviceRos<nanotec::Nanotec, nanotec::Command>::worker() {
+void EthercatDeviceRos<nanotec::Nanotec>::worker() {
+    ROS_INFO("Nanotec worker thread started.");
     ros::Rate loop_rate(reading_pub_freq);
-    while(true){
-
+    worker_loop_running_ = true;
+    while(!this->abrt){
         if (device_info_.type == EthercatSlaveType::Nanotec) {
             if(!device_enabled_){
                 device_ptr_->setDriveStateViaPdo(nanotec::DriveState::OperationEnabled, false);
             }
+
+            ROS_INFO("Last PDO State Change Success: %d", device_ptr_->lastPdoStateChangeSuccessful());
+
+            nanotec::Command cmd;
+            cmd.setModeOfOperation(nanotec::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+            cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
+            cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
+            cmd.setTargetTorqueRaw(last_command_msg_ptr_->targetTorque);
+            cmd.setPositionOffsetRaw(last_command_msg_ptr_->positionOffset);
+            cmd.setTorqueOffsetRaw(last_command_msg_ptr_->torqueOffset);
+            cmd.setVelocityOffsetRaw(last_command_msg_ptr_->velocityOffset);
+
+            device_ptr_->stageCommand(cmd);
+
+            nanotec::Reading reading;
+            device_ptr_->getReading(reading);
+            reading_msg_.header.stamp = ros::Time::now();
+            reading_msg_.actualPosition = reading.getActualPositionRaw();
+            ROS_INFO("Actual position: %d", reading_msg_.actualPosition);
+            reading_msg_.actualVelocity = reading.getActualVelocityRaw();
+            reading_msg_.statusword = reading.getRawStatusword();
+            reading_msg_.demandTorque = reading.getDemandTorqueRaw();
+            reading_msg_.actualTorque = reading.getActualTorqueRaw();
+            reading_msg_.actualFollowingError = reading.getActualFollowingErrorRaw();
+            reading_pub_ptr_->publish(reading_msg_);
 
             // set commands if we can
             if (device_ptr_->lastPdoStateChangeSuccessful() &&
                     device_ptr_->getReading().getDriveState() == nanotec::DriveState::OperationEnabled)
             {
                 // @todo: make mode of operation configurable
-                staged_command_ptr_->setModeOfOperation(nanotec::ModeOfOperationEnum::CyclicSynchronousPositionMode);
 
-                reading_msg_.header.stamp = ros::Time::now();
-                reading_msg_.actualPosition = device_ptr_->getReading().getActualPositionRaw();
-                reading_msg_.actualVelocity = device_ptr_->getReading().getActualVelocityRaw();
-                reading_msg_.statusword = device_ptr_->getReading().getRawStatusword();
-                reading_msg_.demandTorque = device_ptr_->getReading().getDemandTorqueRaw();
-                reading_msg_.actualTorque = device_ptr_->getReading().getActualTorqueRaw();
-                reading_msg_.actualFollowingError = device_ptr_->getReading().getActualFollowingErrorRaw();
+                device_enabled_ = true;
             }
             else
             {
+                device_enabled_ = false;
                 MELO_WARN_STREAM("Nanotec '" << device_ptr_->getName()
                                                                     << "': " << device_ptr_->getReading().getDriveState());
             }
-            reading_pub_ptr_->publish(reading_msg_);
             loop_rate.sleep();
         }
         else{
@@ -289,6 +348,7 @@ void EthercatDeviceRos<nanotec::Nanotec, nanotec::Command>::worker() {
             checkSlaveTypeAvailability();
         }
     }
+    worker_loop_running_ = false;
 }
 // <-------- Nanotec
 

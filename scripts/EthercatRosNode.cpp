@@ -60,6 +60,7 @@ void signal_handler(int sig)
     ** or simliar safety measures at this point using e.g. atomic variables and checking them
     ** in the communication update loop.
      */
+    ROS_INFO("[EthercatROSNode] SIGINT issued. Pre-shutdown procedure engaged.");
     for(const auto & master: configurator->getMasters())
     {
         master->preShutdown();
@@ -70,7 +71,8 @@ void signal_handler(int sig)
     worker_thread->join();
     for(const auto &slave : configurator->getSlaves())
     {
-        slave->joinWorkerThread();
+        slave->abort(); // Stops the worker loop
+        slave->joinWorkerThread(); // Stops the entire worker thread. But needs abort first.
     }
 
 
@@ -89,6 +91,7 @@ void signal_handler(int sig)
     // Exit this executable
     std::cout << "Shutdown" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ros::shutdown();
     exit(0);
 }
 

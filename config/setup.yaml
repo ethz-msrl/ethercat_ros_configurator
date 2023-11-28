@@ -1,14 +1,20 @@
 ethercat_master:
-  time_step:                          0.0025
+  time_step:                          0.001
   update_rate_too_low_warn_threshold: 50
   ros_namespace:                      ethercat_master
 
 ethercat_devices:
   - type:               Nanotec
-    name:               Nanotec
+    name:               Nanotec_Motor_1
     configuration_file: device_configurations/nanotec.yaml
     ethercat_bus:       enx782d7e117ff5
     ethercat_address:   1
+
+  - type:               Nanotec
+    name:               Nanotec_Motor_2
+    configuration_file: device_configurations/nanotec.yaml
+    ethercat_bus:       enx782d7e117ff5
+    ethercat_address:   2
 
   # - type:               Maxon
   #   name:               Maxon

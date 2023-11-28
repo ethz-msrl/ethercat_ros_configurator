@@ -30,11 +30,11 @@ Hardware:
   speed_unit: 11814656 # 0x00B44700 for rpm
 
 AutoSetup:
-  auto_setup_en: true
+  auto_setup_en: false
   auto_setup_timeout_ms: 30000
 
 Homing:
-  homing_en: true
+  homing_en: false
   home_offset: 0
   homing_method: -17
   homing_speed_zero_search: 50 #5deg/s
