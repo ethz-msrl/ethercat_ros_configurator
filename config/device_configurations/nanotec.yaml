@@ -3,7 +3,7 @@ Nanotec:
   config_run_sdo_verify_timeout: 150000
   drive_state_change_min_timeout: 2000
   drive_state_change_max_timeout: 1000000
-  min_number_of_successful_target_state_readings: 50
+  min_number_of_successful_target_state_readings: 10
   interpolation_time_period_ms: 1 # Leave this to >= 1, never set it to 0
 
 Reading:
@@ -26,8 +26,8 @@ Hardware:
   limit_switch_negative_en: false
   limit_switch_positive_en: false
   limit_switch_homing_en: false
-  position_unit: 4282449920 # 0xFF41000 for tenths of a degree, 3600 = 1 full mechanical rev
-  speed_unit: 11814656 # 0x00B44700 for rpm
+  # position_unit: 267653120  # 0xFF41000 for tenths of a degree, 3600 = 1 full mechanical rev
+  # velocity_unit: 11814656 # 0x00B44700 for rpm
 
 AutoSetup:
   auto_setup_en: false

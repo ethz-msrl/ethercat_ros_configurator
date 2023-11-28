@@ -128,10 +128,7 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
 
         virtual void abort() override {
             ROS_DEBUG("EthercatDevice %s aborting.", device_info_.name.c_str());
-            while(worker_loop_running_){
-                abrt = true;
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
+            abrt = true;
         }
 
         /**
@@ -216,14 +213,16 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         std::unique_ptr<ros::Subscriber> command_sub_ptr_; // A unique pointer to command subscriber
         std::unique_ptr<ros::Publisher> reading_pub_ptr_; // A unique pointer to reading publisher
         std::unique_ptr<ethercat_motor_msgs::MotorCtrlMessage> last_command_msg_ptr_; // A unique pointer to latest command message received
-        std::unique_ptr<std::recursive_mutex> command_msg_mutex_ptr_; // A unique pointer to mutex for command message callback rw locks
+        // Maybe the command_msg_mutex doesn't need to be a pointer.
+        std::unique_ptr<std::recursive_mutex> command_msg_mutex_ptr_; // A unique pointer to mutex for command message callback rw locks.
         ethercat_motor_msgs::MotorStatusMessage reading_msg_; // make this a pointer too?
         bool device_enabled_ = false;
-        bool abrt = false;
+        std::atomic<bool> abrt = false;
         bool worker_loop_running_ = false;
         uint32_t reading_pub_freq = 100; // Hz
 
-        
+        // NOTE: One can also make the command message an atomic type since all the ROS msg fields are
+        // generally trivially copyable structs. Not implemented for now, but maybe in the future to avoid mutex locking.
 };
 
 // --------> DEVICE SPECIFIC SPECIALIZATIONS <--------
@@ -231,13 +230,32 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
 // --------> Maxon
 template <>
 void EthercatDeviceRos<maxon::Maxon>::worker(){
+    ROS_INFO_STREAM("Maxon '" << device_ptr_->getName() << "': Worker thread started.");
     ros::Rate loop_rate(reading_pub_freq);
     worker_loop_running_ = true;
-    while(!this->abrt){
+    std::unique_lock<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
+    lock.unlock();
+    while(true){
+        if(this->abrt){
+            break;
+        }
         if (device_info_.type == EthercatSlaveType::Maxon) {
             if(!device_enabled_){
                 device_ptr_->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
+                // Small delay to allow the PDO state change flag to be set. Due to the min number
+                // of succesful PDO state readings check taking some time.
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
+
+            maxon::Reading reading;
+            reading_msg_.header.stamp = ros::Time::now();
+            reading_msg_.actualPosition = reading.getActualPositionRaw();
+            reading_msg_.actualVelocity = reading.getActualVelocityRaw();
+            reading_msg_.statusword = reading.getRawStatusword();
+            reading_msg_.analogInput = reading.getAnalogInputRaw();
+            reading_msg_.busVoltage = reading.getBusVoltageRaw();
+            reading_msg_.actualTorque   = reading.getActualCurrent(); // see txPDO defn in maxon's SDK
+            reading_pub_ptr_->publish(reading_msg_);
 
             // set commands if we can
             if (device_ptr_->lastPdoStateChangeSuccessful() &&
@@ -249,33 +267,25 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
                 // Initially a pointer to command was maintained, but was removed for uneccessary
                 // template specializations. This should have a slight allocation overhead but compiler
                 // optimizations should reduce it a bit.
-                std::lock_guard<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
+
                 maxon::Command cmd;
                 cmd.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                lock.lock();
                 cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
                 cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
                 cmd.setTargetTorqueRaw(last_command_msg_ptr_->targetTorque);
                 cmd.setPositionOffsetRaw(last_command_msg_ptr_->positionOffset);
                 cmd.setTorqueOffsetRaw(last_command_msg_ptr_->torqueOffset);
                 cmd.setVelocityOffsetRaw(last_command_msg_ptr_->velocityOffset);
-
+                lock.unlock();
                 device_ptr_->stageCommand(cmd);
 
-                maxon::Reading reading;
-                reading_msg_.header.stamp = ros::Time::now();
-                reading_msg_.actualPosition = reading.getActualPositionRaw();
-                reading_msg_.actualVelocity = reading.getActualVelocityRaw();
-                reading_msg_.statusword = reading.getRawStatusword();
-                reading_msg_.analogInput = reading.getAnalogInputRaw();
-                reading_msg_.busVoltage = reading.getBusVoltageRaw();
-                reading_msg_.actualTorque   = reading.getActualCurrent(); // see txPDO defn in maxon's SDK
-                reading_pub_ptr_->publish(reading_msg_);
                 device_enabled_ = true;
             }
             else
             {
                 device_enabled_ = false;
-                MELO_WARN_STREAM("Maxon '" << device_ptr_->getName()
+                ROS_WARN_STREAM("Maxon '" << device_ptr_->getName()
                                                                     << "': " << device_ptr_->getReading().getDriveState());
             }
 
@@ -293,33 +303,29 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
 // --------> Nanotec
 template <>
 void EthercatDeviceRos<nanotec::Nanotec>::worker() {
-    ROS_INFO("Nanotec worker thread started.");
+    ROS_INFO_STREAM("Nanotec '" << device_ptr_->getName() << "': Worker thread started.");
     ros::Rate loop_rate(reading_pub_freq);
     worker_loop_running_ = true;
-    while(!this->abrt){
+    std::unique_lock<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
+    lock.unlock();
+    while(true){
+        if(this->abrt){
+            ROS_INFO_STREAM("Nanotec '" << device_ptr_->getName() << "': Worker thread abort command issued.");
+            break;
+        }
         if (device_info_.type == EthercatSlaveType::Nanotec) {
             if(!device_enabled_){
                 device_ptr_->setDriveStateViaPdo(nanotec::DriveState::OperationEnabled, false);
+                // Small delay to allow the PDO state change flag to be set. Due to the min number
+                // of succesful PDO state readings check taking some time. Increase delay with min
+                // number of succesful PDO state readings (param).
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
-
-            ROS_INFO("Last PDO State Change Success: %d", device_ptr_->lastPdoStateChangeSuccessful());
-
-            nanotec::Command cmd;
-            cmd.setModeOfOperation(nanotec::ModeOfOperationEnum::CyclicSynchronousPositionMode);
-            cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
-            cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
-            cmd.setTargetTorqueRaw(last_command_msg_ptr_->targetTorque);
-            cmd.setPositionOffsetRaw(last_command_msg_ptr_->positionOffset);
-            cmd.setTorqueOffsetRaw(last_command_msg_ptr_->torqueOffset);
-            cmd.setVelocityOffsetRaw(last_command_msg_ptr_->velocityOffset);
-
-            device_ptr_->stageCommand(cmd);
 
             nanotec::Reading reading;
             device_ptr_->getReading(reading);
             reading_msg_.header.stamp = ros::Time::now();
             reading_msg_.actualPosition = reading.getActualPositionRaw();
-            ROS_INFO("Actual position: %d", reading_msg_.actualPosition);
             reading_msg_.actualVelocity = reading.getActualVelocityRaw();
             reading_msg_.statusword = reading.getRawStatusword();
             reading_msg_.demandTorque = reading.getDemandTorqueRaw();
@@ -334,11 +340,23 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
                 // @todo: make mode of operation configurable
 
                 device_enabled_ = true;
+                nanotec::Command cmd;
+                cmd.setModeOfOperation(nanotec::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                lock.lock();
+                cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
+                cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
+                cmd.setTargetTorqueRaw(last_command_msg_ptr_->targetTorque);
+                cmd.setPositionOffsetRaw(last_command_msg_ptr_->positionOffset);
+                cmd.setTorqueOffsetRaw(last_command_msg_ptr_->torqueOffset);
+                cmd.setVelocityOffsetRaw(last_command_msg_ptr_->velocityOffset);
+                lock.unlock();
+
+                device_ptr_->stageCommand(cmd);
             }
             else
             {
                 device_enabled_ = false;
-                MELO_WARN_STREAM("Nanotec '" << device_ptr_->getName()
+                ROS_WARN_STREAM("Nanotec '" << device_ptr_->getName()
                                                                     << "': " << device_ptr_->getReading().getDriveState());
             }
             loop_rate.sleep();
