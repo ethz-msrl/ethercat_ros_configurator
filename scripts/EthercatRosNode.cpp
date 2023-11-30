@@ -92,7 +92,7 @@ void signal_handler(int sig)
     std::cout << "Shutdown" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     ros::shutdown();
-    exit(0);
+    _exit(0); // more thread safe than exit(0)
 }
 
 

@@ -1,0 +1,40 @@
+Maxon:
+  config_run_sdo_verify_timeout: 50000
+  print_debug_messages: true
+  use_raw_commands: true
+  drive_state_change_min_timeout: 2000
+  drive_state_change_max_timeout: 10000 # microseconds
+  min_number_of_successful_target_state_readings: 5
+
+Reading:
+  force_append_equal_error: true
+  force_append_equal_fault: false
+  error_storage_capacity: 100
+  fault_storage_capacity: 100
+
+Hardware:
+  mode_of_operation:
+  - CyclicSynchronousPositionMode
+  position_encoder_resolution: 4096 # Counts per revolution
+  gear_ratio: [1, 1] # Absolute Reduction in Datasheet
+  motor_constant: 1.0 # Not being used anywhere in SDK from my observation
+  working_voltage: 48 # V
+  pole_pairs: 1 # Number of pole pairs
+  speed_constant: 1300 # RPM/V so min^-1/V
+  torque_constant: 0.00733 # Nm/A
+  max_current: 2.06 # A
+  nominal_current: 1.03 # A
+  min_position: 0
+  max_position: 0 # Disable checks, software position limits
+  max_profile_velocity: 137 # max. permissible speed, RPM, actual is 11k, but keeping a safe buffer
+  quick_stop_decel: 10000
+  profile_decel: 10000
+  follow_error_window: 2000 # Check startup params in EPOS studio
+  # All Gains follow their SI units
+  current_p_gain: 3.025484 # V/A, Check OD from EPOS Studio
+  current_i_gain: 16176.110 # V/(A*s), Check OD from EPOS Studio
+  position_p_gain: 5.000112 # A/rad, Check OD from EPOS Studio
+  position_i_gain: 200.000 # A/(rad*s), Check OD from EPOS Studio
+  position_d_gain: 0.04 # A*s/rad, Check OD from EPOS Studio
+  velocity_p_gain: 0.017347 # A*s/rad, Check OD from EPOS Studio 
+  velocity_i_gain: 2.556030 # A/rad, Check OD from EPOS Studio

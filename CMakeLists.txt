@@ -17,6 +17,8 @@ add_definitions(-DMELO_USE_COUT)
 find_package(yaml-cpp REQUIRED)
 
 find_package(catkin REQUIRED)
+find_package(roscpp REQUIRED)
+find_package(rospy REQUIRED)
 
 find_package(maxon_epos_ethercat_sdk )
 find_package(nanotec_ethercat_sdk )
@@ -71,8 +73,6 @@ target_link_libraries(
   stdc++fs
 )
 
-
-
 add_executable(
   ethercat_ros_node
   scripts/EthercatRosNode.cpp
@@ -91,6 +91,10 @@ target_link_libraries(
   ${YAML_CPP_LIBRARIES}
   -pthread
   stdc++fs
+)
+
+catkin_install_python(PROGRAMS scripts/test_reference_generator.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 install(TARGETS ${PROJECT_NAME} ethercat_ros_node

@@ -7,6 +7,7 @@
 #include <ros/ros.h>
 
 #include <thread>
+#include <csignal>
 #include <chrono>
 #include <mutex>
 
@@ -217,9 +218,9 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         std::unique_ptr<std::recursive_mutex> command_msg_mutex_ptr_; // A unique pointer to mutex for command message callback rw locks.
         ethercat_motor_msgs::MotorStatusMessage reading_msg_; // make this a pointer too?
         bool device_enabled_ = false;
-        std::atomic<bool> abrt = false;
+        volatile std::atomic<bool> abrt = false;
         bool worker_loop_running_ = false;
-        uint32_t reading_pub_freq = 100; // Hz
+        uint32_t reading_pub_freq = 500; // Hz
 
         // NOTE: One can also make the command message an atomic type since all the ROS msg fields are
         // generally trivially copyable structs. Not implemented for now, but maybe in the future to avoid mutex locking.
@@ -235,10 +236,7 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
     worker_loop_running_ = true;
     std::unique_lock<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
     lock.unlock();
-    while(true){
-        if(this->abrt){
-            break;
-        }
+    while(!abrt){
         if (device_info_.type == EthercatSlaveType::Maxon) {
             if(!device_enabled_){
                 device_ptr_->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
@@ -297,6 +295,7 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
         }
     }
     worker_loop_running_ = false;
+    return;
 }
 // <-------- Maxon
 
@@ -308,11 +307,7 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
     worker_loop_running_ = true;
     std::unique_lock<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
     lock.unlock();
-    while(true){
-        if(this->abrt){
-            ROS_INFO_STREAM("Nanotec '" << device_ptr_->getName() << "': Worker thread abort command issued.");
-            break;
-        }
+    while(!abrt){
         if (device_info_.type == EthercatSlaveType::Nanotec) {
             if(!device_enabled_){
                 device_ptr_->setDriveStateViaPdo(nanotec::DriveState::OperationEnabled, false);
@@ -367,6 +362,7 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
         }
     }
     worker_loop_running_ = false;
+    return;
 }
 // <-------- Nanotec
 

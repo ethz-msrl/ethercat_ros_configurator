@@ -17,27 +17,7 @@ ethercat_devices:
     ethercat_address:   2
 
   # - type:               Maxon
-  #   name:               Maxon
-  #   configuration_file: device_configurations/maxon.yaml
+  #   name:               Maxon_EyeSim_Small
+  #   configuration_file: device_configurations/maxon_eyesim_small.yaml
   #   ethercat_bus:       enx782d7e117ff5
-  #   ethercat_address:   1
-
-  # - type:               Elmo
-  #   name:               ElmoTwitter
-  #   configuration_file: device_configurations/elmo.yaml
-  #   ethercat_bus:       eth0
-  #   ethercat_address:   2
-
-  # - type:               Anydrive
-  #   name:               Dynadrive
-  #   configuration_file: device_configurations/anydrive.yaml
-  #   ethercat_bus:       eth0
   #   ethercat_address:   3
-  #   ethercat_pdo_type:  C
-
-  # - type:               Rokubi
-  #   name:               Rokubi
-  #   configuration_file: device_configurations/rokubi.yaml
-  #   ethercat_bus:       eth0
-  #   ethercat_address:   4
-  #   ethercat_pdo_type:  Z
