@@ -128,7 +128,7 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         EthercatDeviceRos& operator=(const EthercatDeviceRos&) = delete;
 
         virtual void abort() override {
-            ROS_DEBUG("EthercatDevice %s aborting.", device_info_.name.c_str());
+            ROS_INFO("EthercatDevice %s aborting.", device_info_.name.c_str());
             abrt = true;
         }
 
@@ -167,21 +167,24 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
             ROS_ERROR("EthercatDeviceRos::workerDispatch() not implemented for this device type.");
         }
 
-        void checkSlaveTypeAvailability(){
+        bool checkSlaveTypeAvailability(){
             if (device_info_.type == EthercatSlaveType::Maxon) {
                 if (device_ptr_ == nullptr) {
                     ROS_ERROR_STREAM("Maxon '" << device_info_.name << "' pointer not available to device class.");
-                    return;
+                    return false;
                 }
+                return true;
             }
             else if (device_info_.type == EthercatSlaveType::Nanotec) {
                 if (device_ptr_ == nullptr) {
                     ROS_ERROR_STREAM("Nanotec '" << device_info_.name << "' pointer not available to device class.");
-                    return;
+                    return false;
                 }
+                return true;
             }
             else {
                 ROS_ERROR_STREAM("[EthercatDeviceRos::checkSlaveTypeAvailability()] Ethercat ROS configurator not implemented for this device type.");
+                return false;
             }
         }
 
@@ -214,13 +217,14 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         std::unique_ptr<ros::Subscriber> command_sub_ptr_; // A unique pointer to command subscriber
         std::unique_ptr<ros::Publisher> reading_pub_ptr_; // A unique pointer to reading publisher
         std::unique_ptr<ethercat_motor_msgs::MotorCtrlMessage> last_command_msg_ptr_; // A unique pointer to latest command message received
-        // Maybe the command_msg_mutex doesn't need to be a pointer.
+        // Maybe the command_msg_mutex doesn't need to be a pointer. If the worker and the command callbacks belong to different classes after
+        // move then it makes sense. Otherwise it doesn't have to be a pointer.
         std::unique_ptr<std::recursive_mutex> command_msg_mutex_ptr_; // A unique pointer to mutex for command message callback rw locks.
         ethercat_motor_msgs::MotorStatusMessage reading_msg_; // make this a pointer too?
         bool device_enabled_ = false;
         volatile std::atomic<bool> abrt = false;
         bool worker_loop_running_ = false;
-        uint32_t reading_pub_freq = 500; // Hz
+        uint32_t reading_pub_freq = 100; // Hz
 
         // NOTE: One can also make the command message an atomic type since all the ROS msg fields are
         // generally trivially copyable structs. Not implemented for now, but maybe in the future to avoid mutex locking.

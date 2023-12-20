@@ -1,23 +1,23 @@
 <!-- Launch file to start the test_reference_generator node -->
 <launch>
     <node name="test_reference_generator" pkg="ethercat_ros_configurator" type="test_reference_generator.py" output="screen">
-        <param name="command_topic" value="/ethercat_master/Nanotec_Motor_2/command" type="string"/>
-        <param name="status_topic" value="/ethercat_master/Nanotec_Motor_2/reading" type="string"/>
+        <param name="command_topic" value="/ethercat_master/Maxon_EyeSim_Small/command" type="string"/>
+        <param name="status_topic" value="/ethercat_master/Maxon_EyeSim_Small/reading" type="string"/>
         <!-- Available signal types:
             1. sine
             2. sawtooth
             3. square
             4. triangle
             5. smoothstep -->
-        <param name="signal" value="sawtooth" type="string"/>
-        <param name="frequency" value="8" type="double"/>
-        <param name="sample_rate" value="400" type="double"/>
+        <param name="signal" value="square" type="string"/>
+        <param name="frequency" value="4" type="double"/>
+        <param name="sample_rate" value="100" type="double"/>
         <param name="amplitude" value="1000" type="double" />
         <param name="amplitude_limit_min" value="0" type="double"/>
         <param name="amplitude_limit_max" value="3600" type="double"/>
         <param name="offset" value="1800" type="double"/>
         <param name="phase_shift" value="0.0" type="double"/>
-        <param name="duration" value="4.0" type="double"/>
+        <param name="duration" value="10.0" type="double"/>
         <param name="plot" value="true" type="bool"/>
         <param name="save_data" value="true" type="bool"/>
         <param name="save_data_path" value="$(find ethercat_ros_configurator)/test_data" type="string"/>

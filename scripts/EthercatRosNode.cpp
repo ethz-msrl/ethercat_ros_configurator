@@ -104,9 +104,9 @@ void signal_handler(int sig)
 int main(int argc, char**argv)
 {
     // Set the abrt_ flag upon receiving an interrupt signal (e.g. Ctrl-c)
+    // ROS Initialization, tell ROS to not install a SIGINT handler, we specify our own.
+    ros::init(argc, argv, "ethercat_ros_configurator", ros::init_options::NoSigintHandler);
     std::signal(SIGINT, signal_handler);
-    // ROS Initialization
-    ros::init(argc, argv, "ethercat_ros_configurator");
 
     if(argc < 2)
     {
