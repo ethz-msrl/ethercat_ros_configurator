@@ -208,6 +208,16 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             {
                 throw std::runtime_error("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry ethercat_bus");
             }
+
+            //thread_frequency - entry
+            if(child["thread_frequency"])
+            {
+                entry.thread_frequency = child["thread_frequency"].as<double>();
+            }
+            else
+            {
+                ROS_WARN_STREAM("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry thread_frequency. Using default value of 100Hz");
+            }
             m_slave_entries.push_back(entry);
         }
     }

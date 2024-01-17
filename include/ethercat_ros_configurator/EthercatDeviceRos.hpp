@@ -29,6 +29,7 @@ struct EthercatSlaveEntry
     uint32_t ethercat_address = 0;
     std::string ethercat_bus = "";
     std::string ethercat_pdo_type = "";
+    uint32_t thread_frequency = 100;
 };
 
 
@@ -158,6 +159,12 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
     protected:
         std::unique_ptr<std::thread> worker_thread_ptr_;
 
+        /**
+         * @brief worker - worker thread function
+         * This is the main thread which reads the local command buffer and sends them
+         * to the command class of the device. It also reads the readings from the device
+         * and publishes them.
+        */
         void worker() {
             
             // Worker thread retains the style of standalone.cpp because of software
@@ -217,14 +224,11 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         std::unique_ptr<ros::Subscriber> command_sub_ptr_; // A unique pointer to command subscriber
         std::unique_ptr<ros::Publisher> reading_pub_ptr_; // A unique pointer to reading publisher
         std::unique_ptr<ethercat_motor_msgs::MotorCtrlMessage> last_command_msg_ptr_; // A unique pointer to latest command message received
-        // Maybe the command_msg_mutex doesn't need to be a pointer. If the worker and the command callbacks belong to different classes after
-        // move then it makes sense. Otherwise it doesn't have to be a pointer.
         std::unique_ptr<std::recursive_mutex> command_msg_mutex_ptr_; // A unique pointer to mutex for command message callback rw locks.
         ethercat_motor_msgs::MotorStatusMessage reading_msg_; // make this a pointer too?
         bool device_enabled_ = false;
         volatile std::atomic<bool> abrt = false;
         bool worker_loop_running_ = false;
-        uint32_t reading_pub_freq = 100; // Hz
 
         // NOTE: One can also make the command message an atomic type since all the ROS msg fields are
         // generally trivially copyable structs. Not implemented for now, but maybe in the future to avoid mutex locking.
@@ -236,7 +240,7 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
 template <>
 void EthercatDeviceRos<maxon::Maxon>::worker(){
     ROS_INFO_STREAM("Maxon '" << device_ptr_->getName() << "': Worker thread started.");
-    ros::Rate loop_rate(reading_pub_freq);
+    ros::Rate loop_rate(device_info_.thread_frequency);
     worker_loop_running_ = true;
     std::unique_lock<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
     lock.unlock();
@@ -250,6 +254,7 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
             }
 
             maxon::Reading reading;
+            device_ptr_->getReading(reading);
             reading_msg_.header.stamp = ros::Time::now();
             reading_msg_.actualPosition = reading.getActualPositionRaw();
             reading_msg_.actualVelocity = reading.getActualVelocityRaw();
@@ -307,7 +312,7 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
 template <>
 void EthercatDeviceRos<nanotec::Nanotec>::worker() {
     ROS_INFO_STREAM("Nanotec '" << device_ptr_->getName() << "': Worker thread started.");
-    ros::Rate loop_rate(reading_pub_freq);
+    ros::Rate loop_rate(device_info_.thread_frequency);
     worker_loop_running_ = true;
     std::unique_lock<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
     lock.unlock();

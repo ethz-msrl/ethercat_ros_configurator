@@ -28,6 +28,7 @@ class TestReferenceGenerator:
         # Get the command topic to publish to
         self.command_topic = rospy.get_param('~command_topic')
         self.status_topic = rospy.get_param('~status_topic')
+        self.name = rospy.get_param('~name', 'default_name')
         self.signal = rospy.get_param('~signal', 'sine')
         self.frequency = rospy.get_param('~frequency', 1.0)
         self.amplitude = rospy.get_param('~amplitude', 1.0)
@@ -151,7 +152,7 @@ class TestReferenceGenerator:
     
     def save_data_to_file(self):
         # Generate the filename with the current date and time prefix
-        filename = self.save_path + f"{self._data_prefix}_data.pkl"
+        filename = self.save_path + f"{self.name}_{self._data_prefix}_data.pkl"
 
         # Create a dictionary to store the data
         data = {
@@ -199,8 +200,8 @@ class TestReferenceGenerator:
         fig = plt.gcf()
         fig.set_size_inches(18.5, 5.5)
         if self.save_data:
-            plt.savefig(self.save_path + f"{self._data_prefix}_plot.png", dpi=600)
-            print(f"Plot saved to {self.save_path + f'{self._data_prefix}_plot.png'}")
+            plt.savefig(self.save_path + f"{self.name}_{self._data_prefix}_plot.png", dpi=600)
+            print(f"Plot saved to {self.save_path + f'{self.name}_{self._data_prefix}_plot.png'}")
         plt.show()
 
 if __name__ == '__main__':
