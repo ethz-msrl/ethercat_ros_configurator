@@ -229,6 +229,7 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         bool device_enabled_ = false;
         volatile std::atomic<bool> abrt = false;
         bool worker_loop_running_ = false;
+        bool startup_complete_ = false;
 
         // NOTE: One can also make the command message an atomic type since all the ROS msg fields are
         // generally trivially copyable structs. Not implemented for now, but maybe in the future to avoid mutex locking.
@@ -263,6 +264,7 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
             reading_msg_.busVoltage = reading.getBusVoltageRaw();
             reading_msg_.actualTorque   = reading.getActualCurrent(); // see txPDO defn in maxon's SDK
             reading_pub_ptr_->publish(reading_msg_);
+
 
             // set commands if we can
             if (device_ptr_->lastPdoStateChangeSuccessful() &&
@@ -336,6 +338,19 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
             reading_msg_.actualTorque = reading.getActualTorqueRaw();
             reading_msg_.actualFollowingError = reading.getActualFollowingErrorRaw();
             reading_pub_ptr_->publish(reading_msg_);
+
+            if(!startup_complete_){
+                startup_complete_ = true;
+                last_command_msg_ptr_->targetPosition = reading.getActualPositionRaw();
+                last_command_msg_ptr_->targetVelocity = reading.getActualVelocityRaw();
+                last_command_msg_ptr_->targetTorque = reading.getActualTorqueRaw();
+                last_command_msg_ptr_->positionOffset = 0;
+                last_command_msg_ptr_->velocityOffset = 0;
+                last_command_msg_ptr_->torqueOffset = 0;
+                last_command_msg_ptr_->motionProfileType = 0;
+                last_command_msg_ptr_->profileAcceleration = 0;
+                last_command_msg_ptr_->profileDeceleration = 0;
+            }
 
             // set commands if we can
             if (device_ptr_->lastPdoStateChangeSuccessful() &&
