@@ -9,7 +9,7 @@
             3. square
             4. triangle
             5. smoothstep -->
-        <param name="signal" value="sine" type="string"/>
+        <param name="signal" value="triangle" type="string"/>
         <param name="name" value="nanotec_motor1" type="string"/>
         <param name="frequency" value="2" type="double"/>
         <param name="sample_rate" value="100" type="double"/>
@@ -23,7 +23,7 @@
         <param name="save_data" value="true" type="bool"/>
         <param name="save_data_path" value="$(find ethercat_ros_configurator)/test_data" type="string"/>
     </node>
-    
+
     <node name="test_ref_generator_m2" pkg="ethercat_ros_configurator" type="test_reference_generator.py" output="screen">
         <param name="command_topic" value="/ethercat_master/Nanotec_Motor_2/command" type="string"/>
         <param name="status_topic" value="/ethercat_master/Nanotec_Motor_2/reading" type="string"/>
@@ -33,7 +33,7 @@
             3. square
             4. triangle
             5. smoothstep -->
-        <param name="signal" value="square" type="string"/>
+        <param name="signal" value="sawtooth" type="string"/>
         <param name="name" value="nanotec_motor2" type="string"/>
         <param name="frequency" value="2" type="double"/>
         <param name="sample_rate" value="100" type="double"/>
