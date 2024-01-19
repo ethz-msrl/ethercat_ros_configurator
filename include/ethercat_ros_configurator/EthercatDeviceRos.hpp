@@ -244,6 +244,19 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
     worker_loop_running_ = true;
     std::unique_lock<std::recursive_mutex> lock(*command_msg_mutex_ptr_);
     lock.unlock();
+
+    maxon::Reading reading;
+    device_ptr_->getReading(reading);
+    last_command_msg_ptr_->targetPosition = reading.getActualPositionRaw();
+    last_command_msg_ptr_->targetVelocity = reading.getActualVelocityRaw();
+    last_command_msg_ptr_->targetTorque = reading.getActualCurrentRaw();
+    last_command_msg_ptr_->positionOffset = 0;
+    last_command_msg_ptr_->velocityOffset = 0;
+    last_command_msg_ptr_->torqueOffset = 0;
+    last_command_msg_ptr_->motionProfileType = 0;
+    last_command_msg_ptr_->profileAcceleration = 0;
+    last_command_msg_ptr_->profileDeceleration = 0;
+
     while(!abrt){
         if (device_info_.type == EthercatSlaveType::Maxon) {
             if(!device_enabled_){
