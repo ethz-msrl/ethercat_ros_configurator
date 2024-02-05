@@ -5,6 +5,8 @@ Maxon:
   drive_state_change_min_timeout: 2000
   drive_state_change_max_timeout: 10000 # microseconds
   min_number_of_successful_target_state_readings: 5
+  display_error_codes: true
+  disable_configuration_on_startup: false
 
 Reading:
   force_append_equal_error: true
@@ -32,7 +34,7 @@ Hardware:
   max_profile_velocity: 137 # max. permissible speed, RPM, actual is 11k, but keeping a safe buffer
   quick_stop_decel: 10000
   profile_decel: 10000
-  follow_error_window: 2000 # Check startup params in EPOS studio
+  follow_error_window: 20000 # Check startup params in EPOS studio
   # All Gains follow their SI units
   current_p_gain: 9.465886 # V/A, Check OD from EPOS Studio
   current_i_gain: 119671.118 # V/(A*s), Check OD from EPOS Studio
