@@ -215,6 +215,7 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
             last_command_msg_ptr_->version = msg->version;
             last_command_msg_ptr_->profileAcceleration = msg->profileAcceleration;
             last_command_msg_ptr_->profileDeceleration = msg->profileDeceleration;
+            last_command_msg_ptr_->operationMode = msg->operationMode;
         }
     
         std::shared_ptr<DeviceClass> device_ptr_; // Shared pointer to slave.
@@ -257,6 +258,23 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
     last_command_msg_ptr_->profileAcceleration = 0;
     last_command_msg_ptr_->profileDeceleration = 0;
 
+    /**
+     * @brief operation mode mapping for maxon. It is recommended to change the way changing
+     * the mode of operation is handled. This is a temporary solution because this is what 
+     * I thought was feasible with the current class heirarchies and template specializations
+     * while avoiding inheritances from specialized classes. A specific method to handle the
+     * mode of operation would look cleaner and get the intent across visually.
+    */
+   std::map<int, maxon::ModeOfOperationEnum> mode_of_operation_map = {
+        {0, maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode}, // default for empty msg
+        {1, maxon::ModeOfOperationEnum::CyclicSynchronousVelocityMode},
+        {2, maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode},
+        {3, maxon::ModeOfOperationEnum::ProfiledPositionMode},
+        {4, maxon::ModeOfOperationEnum::ProfiledVelocityMode},
+        {5, maxon::ModeOfOperationEnum::HomingMode},
+        {6, maxon::ModeOfOperationEnum::NA}
+   };
+
     while(!abrt){
         if (device_info_.type == EthercatSlaveType::Maxon) {
             if(!device_enabled_){
@@ -290,7 +308,7 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
                 // optimizations should reduce it a bit.
 
                 maxon::Command cmd;
-                cmd.setModeOfOperation(maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                cmd.setModeOfOperation(mode_of_operation_map[last_command_msg_ptr_->operationMode]);
                 lock.lock();
                 cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
                 cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
