@@ -5,6 +5,8 @@ Maxon:
   drive_state_change_min_timeout: 2000
   drive_state_change_max_timeout: 10000 # microseconds
   min_number_of_successful_target_state_readings: 5
+  display_error_codes: true
+  disable_configuration_on_startup: false
 
 Reading:
   force_append_equal_error: true

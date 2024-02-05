@@ -218,6 +218,16 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             {
                 ROS_WARN_STREAM("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry thread_frequency. Using default value of 100Hz");
             }
+
+            if(child["initial_mode_of_operation"])
+            {
+                entry.initial_mode_of_operation = child["initial_mode_of_operation"].as<int>();
+            }
+            else
+            {
+                ROS_WARN_STREAM("[EthercatDeviceConfigurator] Node: " + child.Tag() + " has no entry initial_mode_of_operation. Using default value of 0.");
+            }
+
             m_slave_entries.push_back(entry);
         }
     }

@@ -30,6 +30,7 @@ struct EthercatSlaveEntry
     std::string ethercat_bus = "";
     std::string ethercat_pdo_type = "";
     uint32_t thread_frequency = 100;
+    int8_t initial_mode_of_operation = 0; // Mode "NA" in most drivers
 };
 
 
@@ -71,6 +72,9 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
             
             last_command_msg_ptr_ = std::make_unique<ethercat_motor_msgs::MotorCtrlMessage>();
             command_msg_mutex_ptr_ = std::make_unique<std::recursive_mutex>();
+
+            // set initial mode of operation
+            last_command_msg_ptr_->operationMode = device_info.initial_mode_of_operation;
 
             device_enabled_ = true;
 
@@ -266,13 +270,13 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
      * mode of operation would look cleaner and get the intent across visually.
     */
    std::map<int, maxon::ModeOfOperationEnum> mode_of_operation_map = {
-        {0, maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode}, // default for empty msg
-        {1, maxon::ModeOfOperationEnum::CyclicSynchronousVelocityMode},
-        {2, maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode},
-        {3, maxon::ModeOfOperationEnum::ProfiledPositionMode},
-        {4, maxon::ModeOfOperationEnum::ProfiledVelocityMode},
-        {5, maxon::ModeOfOperationEnum::HomingMode},
-        {6, maxon::ModeOfOperationEnum::NA}
+        {0, maxon::ModeOfOperationEnum::NA},
+        {1, maxon::ModeOfOperationEnum::ProfiledPositionMode}, // default for empty msg
+        {3, maxon::ModeOfOperationEnum::ProfiledVelocityMode},
+        {6, maxon::ModeOfOperationEnum::HomingMode},
+        {8, maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode},
+        {9, maxon::ModeOfOperationEnum::CyclicSynchronousVelocityMode},
+        {10, maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode}
    };
 
     while(!abrt){
@@ -364,6 +368,28 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
     last_command_msg_ptr_->profileAcceleration = 0;
     last_command_msg_ptr_->profileDeceleration = 0;
 
+    /**
+     * @brief operation mode mapping for nanotec. It is recommended to change the way changing
+     * the mode of operation is handled. This is a temporary solution because this is what 
+     * I thought was feasible with the current class heirarchies and template specializations
+     * while avoiding inheritances from specialized classes. A specific method to handle the
+     * mode of operation would look cleaner and get the intent across visually.
+    */
+   std::map<int, nanotec::ModeOfOperationEnum> mode_of_operation_map = {
+        {-2, nanotec::ModeOfOperationEnum::AutoSetup},
+        {-1, nanotec::ModeOfOperationEnum::ClockDirectionMode},
+        {0, nanotec::ModeOfOperationEnum::NA},
+        {1, nanotec::ModeOfOperationEnum::ProfilePositionMode},
+        {2, nanotec::ModeOfOperationEnum::VelocityMode},
+        {3, nanotec::ModeOfOperationEnum::ProfileVelocityMode},
+        {4, nanotec::ModeOfOperationEnum::ProfileTorqueMode},
+        {6, nanotec::ModeOfOperationEnum::HomingMode},
+        {7, nanotec::ModeOfOperationEnum::InterpolatedPositionMode},
+        {8, nanotec::ModeOfOperationEnum::CyclicSynchronousPositionMode},
+        {9, nanotec::ModeOfOperationEnum::CyclicSynchronousVelocityMode},
+        {10, nanotec::ModeOfOperationEnum::CyclicSynchronousTorqueMode}
+   };
+
     while(!abrt){
         if (device_info_.type == EthercatSlaveType::Nanotec) {
             if(!device_enabled_){
@@ -394,7 +420,7 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
 
                 device_enabled_ = true;
                 nanotec::Command cmd;
-                cmd.setModeOfOperation(nanotec::ModeOfOperationEnum::CyclicSynchronousPositionMode);
+                cmd.setModeOfOperation(mode_of_operation_map[last_command_msg_ptr_->operationMode]);
                 lock.lock();
                 cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
                 cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);

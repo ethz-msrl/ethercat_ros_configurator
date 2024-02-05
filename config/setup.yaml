@@ -10,7 +10,7 @@ ethercat_devices:
   #   ethercat_bus:       enx782d7e117ff5 # eth0 usually
   #   ethercat_address:   1
   #   thread_frequency:   100
-  #   initial_mode_of_operation: 0
+  #   initial_mode_of_operation: 8
 
   # - type:               Nanotec
   #   name:               Nanotec_Motor_2
@@ -18,7 +18,7 @@ ethercat_devices:
   #   ethercat_bus:       enx782d7e117ff5
   #   ethercat_address:   2
   #   thread_frequency:   100
-  #   initial_mode_of_operation: 0
+  #   initial_mode_of_operation: 8
 
   - type:               Maxon
     name:               Maxon_EyeSim_Small
@@ -26,7 +26,7 @@ ethercat_devices:
     ethercat_bus:       enp2s0 # enx782d7e117ff5
     ethercat_address:   1
     thread_frequency:   100
-    initial_mode_of_operation: 0
+    initial_mode_of_operation: 8
 
   # - type:               Maxon
   #   name:               Maxon_Test_Motor
@@ -34,4 +34,4 @@ ethercat_devices:
   #   ethercat_bus:       enx782d7e117ff5
   #   ethercat_address:   1
   #   thread_frequency:   100
-  #   initial_mode_of_operation: 0
+  #   initial_mode_of_operation: 8
