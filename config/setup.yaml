@@ -4,19 +4,19 @@ ethercat_master:
   ros_namespace:                      ethercat_master
 
 ethercat_devices:
-  - type:               Nanotec
-    name:               Nanotec_Motor_1
-    configuration_file: device_configurations/nanotec.yaml
-    ethercat_bus:       enx782d7e117ff5 # eth0 usually
-    ethercat_address:   1
-    thread_frequency:   100
+  # - type:               Nanotec
+  #   name:               Nanotec_Motor_1
+  #   configuration_file: device_configurations/nanotec.yaml
+  #   ethercat_bus:       enx782d7e117ff5 # eth0 usually
+  #   ethercat_address:   1
+  #   thread_frequency:   100
 
-  - type:               Nanotec
-    name:               Nanotec_Motor_2
-    configuration_file: device_configurations/nanotec.yaml
-    ethercat_bus:       enx782d7e117ff5
-    ethercat_address:   2
-    thread_frequency:   100
+  # - type:               Nanotec
+  #   name:               Nanotec_Motor_2
+  #   configuration_file: device_configurations/nanotec.yaml
+  #   ethercat_bus:       enx782d7e117ff5
+  #   ethercat_address:   2
+  #   thread_frequency:   100
 
   # - type:               Maxon
   #   name:               Maxon_EyeSim_Small
@@ -25,9 +25,9 @@ ethercat_devices:
   #   ethercat_address:   1
   #   thread_frequency:   100
 
-  # - type:               Maxon
-  #   name:               Maxon_Test_Motor
-  #   configuration_file: device_configurations/maxon_gear.yaml
-  #   ethercat_bus:       enx782d7e117ff5
-  #   ethercat_address:   1
-  #   thread_frequency:   100
+  - type:               Maxon
+    name:               Maxon_Test_Motor
+    configuration_file: device_configurations/maxon_gear.yaml
+    ethercat_bus:       enx782d7e117ff5
+    ethercat_address:   1
+    thread_frequency:   100
