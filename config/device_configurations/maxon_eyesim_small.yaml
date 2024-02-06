@@ -35,14 +35,14 @@ Hardware:
   quick_stop_decel: 10000 # rpm/s , max value bounded by max_acceleration (which defaults to 4'294'967'295)
   profile_decel: 10000 # rpm/s , max value bounded by max_acceleration (which defaults to 4'294'967'295)
   follow_error_window: 20000 # Check startup params in EPOS studio
-  # All Gains follow their SI units
-  current_p_gain: 3.025484 # V/A, Check OD from EPOS Studio (OD is in micro-V/A)
-  current_i_gain: 16176.110 # mV/(A*s), Check OD from EPOS Studio (OD is in micro-V/(A*s))
-  position_p_gain: 5.000112 # A/rad, Check OD from EPOS Studio (OD is in micro-A/rad)
-  position_i_gain: 200.000 # A/(rad*s), Check OD from EPOS Studio (OD is in micro-A/(rad*s))
-  position_d_gain: 0.04 # A*s/rad, Check OD from EPOS Studio (OD is in micro-A*s/rad)
-  velocity_p_gain: 0.017347 # A*s/rad, Check OD from EPOS Studio (OD is in micro-A*s/rad)
-  velocity_i_gain: 2.556030 # A/rad, Check OD from EPOS Studio (OD is in micro-A/rad)
+  # All Gains follow their SI units, (except current i gain)
+  current_p_gain: 3.262434 # V/A, Check OD from EPOS Studio (OD is in mV/A)
+  current_i_gain: 17.884582 # mV/(A*s), Check OD from EPOS Studio (OD is in mV/(A*ms))
+  position_p_gain: 3.452142 # A/rad, Check OD from EPOS Studio (OD is in mA/rad)
+  position_i_gain: 32.994732 # A/(rad*s), Check OD from EPOS Studio (OD is in mA/(rad*s))
+  position_d_gain: 0.021841 # A*s/rad, Check OD from EPOS Studio (OD is in mA*s/rad)
+  velocity_p_gain: 0.091629 # A*s/rad, Check OD from EPOS Studio (OD is in mA*s/rad)
+  velocity_i_gain: 6.573788 # A/rad, Check OD from EPOS Studio (OD is in mA/rad)
 
   motor_type: 10 # Changes certain value ranges. For eg: max_motor_speed
   # Allowed values for motor type: (check EPOS4 firmware ref)
