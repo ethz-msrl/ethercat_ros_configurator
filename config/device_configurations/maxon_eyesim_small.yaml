@@ -18,25 +18,34 @@ Hardware:
   mode_of_operation:
   - CyclicSynchronousPositionMode
   position_encoder_resolution: 4096 # Counts per revolution
-  gear_ratio: [1, 1] # Absolute Reduction in Datasheet
+  gear_ratio: [1, 1] # Absolute Reduction in Datasheet, should be positive and less than 2^32 - 1
   motor_constant: 1.0 # Not being used anywhere in SDK from my observation
   working_voltage: 48 # V
   pole_pairs: 1 # Number of pole pairs
   speed_constant: 1300 # RPM/V so min^-1/V
-  torque_constant: 0.00733 # Nm/A
+  torque_constant: 0.00733 # Nm/A max val is 10,000,000
   max_current: 2.06 # A
   nominal_current: 1.03 # A
   min_position: 0
-  max_position: 0 # Disable checks, software position limits
-  max_profile_velocity: 1000 # max. permissible speed, RPM, actual is 11k, but keeping a safe buffer
-  quick_stop_decel: 10000
-  profile_decel: 10000
+  max_position: 0 # Disable checks, software position limits, can be b/w -(2^31 - 1) to (2^31 - 1)
+  max_profile_velocity: 50 # in rad/s
+  # NOTE: due to velocity unit being micro-RPM, the max value is 224.883 rad/s. Check EPOS4 firmware ref.
+  # Note that the limit gets modified by max_gear_input_speed.
+  max_gear_input_speed: 100000 # RPM, max value is 100,000 RPM.
+  quick_stop_decel: 10000 # rpm/s , max value bounded by max_acceleration (which defaults to 4'294'967'295)
+  profile_decel: 10000 # rpm/s , max value bounded by max_acceleration (which defaults to 4'294'967'295)
   follow_error_window: 20000 # Check startup params in EPOS studio
   # All Gains follow their SI units
-  current_p_gain: 3.025484 # V/A, Check OD from EPOS Studio
-  current_i_gain: 16176.110 # V/(A*s), Check OD from EPOS Studio
-  position_p_gain: 5.000112 # A/rad, Check OD from EPOS Studio
-  position_i_gain: 200.000 # A/(rad*s), Check OD from EPOS Studio
-  position_d_gain: 0.04 # A*s/rad, Check OD from EPOS Studio
-  velocity_p_gain: 0.017347 # A*s/rad, Check OD from EPOS Studio 
-  velocity_i_gain: 2.556030 # A/rad, Check OD from EPOS Studio
+  current_p_gain: 3.025484 # V/A, Check OD from EPOS Studio (OD is in micro-V/A)
+  current_i_gain: 16176.110 # mV/(A*s), Check OD from EPOS Studio (OD is in micro-V/(A*s))
+  position_p_gain: 5.000112 # A/rad, Check OD from EPOS Studio (OD is in micro-A/rad)
+  position_i_gain: 200.000 # A/(rad*s), Check OD from EPOS Studio (OD is in micro-A/(rad*s))
+  position_d_gain: 0.04 # A*s/rad, Check OD from EPOS Studio (OD is in micro-A*s/rad)
+  velocity_p_gain: 0.017347 # A*s/rad, Check OD from EPOS Studio (OD is in micro-A*s/rad)
+  velocity_i_gain: 2.556030 # A/rad, Check OD from EPOS Studio (OD is in micro-A/rad)
+
+  motor_type: 10 # Changes certain value ranges. For eg: max_motor_speed
+  # Allowed values for motor type: (check EPOS4 firmware ref)
+  # 1 : Brushed DC (max_motor_speed limit = 100000)
+  # 10: Brushless DC sine commutated (max_motor_speed limit = 50000/pole_pairs)
+  # 11: Brushless DC block commutated (max_motor_speed limit = 100000/pole_pairs)
