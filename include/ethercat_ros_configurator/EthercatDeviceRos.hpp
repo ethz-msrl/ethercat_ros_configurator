@@ -1,3 +1,4 @@
+#pragma once
 
 #include <ethercat_ros_configurator/EthercatDeviceConfigurator.hpp>
 #include <ethercat_ros_configurator/EthercatDeviceUtils.hpp>
@@ -34,7 +35,6 @@ struct EthercatSlaveEntry
     int8_t initial_mode_of_operation = 0; // Mode "NA" in most drivers
 };
 
-
 class EthercatDeviceRosBase{
     public:
         virtual ~EthercatDeviceRosBase() = default;
@@ -43,6 +43,7 @@ class EthercatDeviceRosBase{
         virtual std::shared_ptr<ecat_master::EthercatDevice> getSlaveObjPtr() const = 0;
         virtual std::string getName() const = 0;
         virtual void abort() = 0;
+        virtual void createDevice() = 0;
 };
 
 template <class DeviceClass>
@@ -56,12 +57,11 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         /**
          * @brief EthercatDeviceRos ctor
         */
-        EthercatDeviceRos(std::shared_ptr<ros::NodeHandle> &nh_ptr, 
-                          const std::shared_ptr<ecat_master::EthercatDevice> &slave, 
-                          EthercatSlaveEntry &device_info){
+        EthercatDeviceRos(const std::shared_ptr<ros::NodeHandle> &nh_ptr,
+                          const EthercatSlaveEntry &device_info){
             nh_ptr_ = nh_ptr;
             device_info_ = device_info;
-            device_ptr_ = std::dynamic_pointer_cast<DeviceClass>(slave);
+            this->createDevice();
 
             command_sub_ptr_ = std::make_unique<ros::Subscriber>(
                 nh_ptr_->subscribe<ethercat_motor_msgs::MotorCtrlMessage>(device_info.name + "/command", 1000, &EthercatDeviceRos::commandCallback, this)
@@ -96,7 +96,7 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
             device_enabled_ = other.device_enabled_;
             abrt = other.abrt;
             other.device_ptr_ = nullptr;
-            other.device_info_ = EthercatSlaveEntry();
+            other.device_info_ = EthercatSlaveEntry(); // not needed because trivial type
         }
 
         /**
@@ -159,6 +159,10 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
 
         virtual std::string getName() const override {
             return device_info_.name;
+        }
+
+        virtual void createDevice() override {
+            ROS_ERROR("EthercatDeviceRos::createDevice() not implemented for this device type.");
         }
         
     protected:
@@ -239,6 +243,61 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         // NOTE: One can also make the command message an atomic type since all the ROS msg fields are
         // generally trivially copyable structs. Not implemented for now, but maybe in the future to avoid mutex locking.
 };
+
+/**
+ * @brief An object factory for allowing easy addition of new device types
+ * through class registrations. It also simplifies the process of device instance creations
+ * for the configurator program thus removing the need to loop over all device types and
+ * choosing a constructor manually. Design for this class was inspired by the factory design pattern
+ * implementation in the nori2 renderer.
+*/
+class EthercatDeviceFactory {
+    public:
+        typedef std::function<std::shared_ptr<EthercatDeviceRosBase> (const std::shared_ptr<ros::NodeHandle> &,
+                                                 const EthercatSlaveEntry &)> DeviceCreator;
+        
+        static void registerDevice(const EthercatSlaveType &type, const DeviceCreator &constructor){
+            if(device_constructors_ == nullptr){
+                device_constructors_ = new std::map<EthercatSlaveType, DeviceCreator>();
+            }
+            if(device_constructors_->find(type) == device_constructors_->end()){
+                (*device_constructors_)[type] = constructor;
+            }
+            else{
+                ROS_ERROR_STREAM("[EthercatDeviceFactory::registerDevice] Tried to register a device type that was already registered.");
+            }
+        }
+
+        static std::shared_ptr<EthercatDeviceRosBase> createDevice(
+            const std::shared_ptr<ros::NodeHandle> &nh_ptr,
+            const EthercatSlaveEntry &device_info){
+
+            EthercatSlaveType type = device_info.type;
+                
+            if(!device_constructors_ || device_constructors_->find(type) == device_constructors_->end()){
+                ROS_ERROR_STREAM("[EthercatDeviceFactory::createDevice] Tried to create a device type that was not registered.");
+                return nullptr;
+            }
+            else{
+                return (*device_constructors_)[type](nh_ptr, device_info);
+            }
+        }
+    protected:
+        static std::map<EthercatSlaveType, DeviceCreator> *device_constructors_;
+};
+
+std::map<EthercatSlaveType, EthercatDeviceFactory::DeviceCreator> *EthercatDeviceFactory::device_constructors_ = nullptr;
+
+#define ETHERCAT_ROS_REGISTER_DEVICE(type, cls) \
+    std::shared_ptr<cls> cls ##_create (const std::shared_ptr<ros::NodeHandle> &nh_ptr, \
+                                        const EthercatSlaveEntry &device_info) { \
+        return std::make_shared<cls>(nh_ptr, device_info); \
+    } \
+    static struct cls ##_register{\
+        cls ##_register() {\
+            EthercatDeviceFactory::registerDevice(type, cls ##_create);\
+        } \
+    } cls ##_register_instance;
 
 // --------> DEVICE SPECIFIC SPECIALIZATIONS <--------
 
@@ -329,6 +388,16 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
     worker_loop_running_ = false;
     return;
 }
+
+template<>
+void EthercatDeviceRos<maxon::Maxon>::createDevice(){
+    device_ptr_ = maxon::Maxon::deviceFromFile(device_info_.config_file_path, device_info_.name, device_info_.ethercat_address);
+}
+
+typedef EthercatDeviceRos<maxon::Maxon> MaxonDeviceRos;
+
+// Don't forget to register the class
+ETHERCAT_ROS_REGISTER_DEVICE(EthercatSlaveType::Maxon, MaxonDeviceRos);
 // <-------- Maxon
 
 // --------> Nanotec
@@ -413,6 +482,15 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
     worker_loop_running_ = false;
     return;
 }
+
+template<>
+void EthercatDeviceRos<nanotec::Nanotec>::createDevice(){
+    device_ptr_ = nanotec::Nanotec::deviceFromFile(device_info_.config_file_path, device_info_.name, device_info_.ethercat_address);
+}
+
+typedef EthercatDeviceRos<nanotec::Nanotec> NanotecDeviceRos;
+
+ETHERCAT_ROS_REGISTER_DEVICE(EthercatSlaveType::Nanotec, NanotecDeviceRos);
 // <-------- Nanotec
 
 } // namespace EthercatRos

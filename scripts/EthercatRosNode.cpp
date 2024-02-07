@@ -1,8 +1,5 @@
 #include <ethercat_ros_configurator/EthercatDeviceConfigurator.hpp>
 
-#include <maxon_epos_ethercat_sdk/Maxon.hpp>
-#include <nanotec_ethercat_sdk/Nanotec.hpp>
-
 #include <thread>
 #include <csignal>
 

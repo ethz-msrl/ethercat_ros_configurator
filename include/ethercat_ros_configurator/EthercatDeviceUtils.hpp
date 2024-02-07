@@ -1,3 +1,4 @@
+#pragma once
 #include <maxon_epos_ethercat_sdk/Maxon.hpp>
 #include <nanotec_ethercat_sdk/Nanotec.hpp>
 #include <ros/ros.h>

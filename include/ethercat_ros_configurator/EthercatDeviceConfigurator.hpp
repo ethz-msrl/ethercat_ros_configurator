@@ -22,9 +22,6 @@
 
 namespace EthercatRos{
 
-typedef EthercatDeviceRos<maxon::Maxon> MaxonDeviceRos;
-typedef EthercatDeviceRos<nanotec::Nanotec> NanotecDeviceRos;
-
 class EthercatDeviceConfigurator
 {
 public:

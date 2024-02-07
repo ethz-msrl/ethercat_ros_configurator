@@ -32,6 +32,9 @@
 
 using namespace EthercatRos;
 
+// ETHERCAT_ROS_REGISTER_DEVICE(EthercatSlaveType::Maxon, MaxonDeviceRos);
+// ETHERCAT_ROS_REGISTER_DEVICE(EthercatSlaveType::Nanotec, NanotecDeviceRos);
+
 static bool path_exists(std::string& path)
 {
     #if __GNUC__ < 8
@@ -183,6 +186,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             if(child["configuration_file"])
             {
                 entry.config_file_path = child["configuration_file"].as<std::string>();
+                entry.config_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
             }
             else
             {
@@ -244,31 +248,9 @@ void EthercatDeviceConfigurator::setup(bool startup)
     {
         MELO_DEBUG_STREAM("[EthercatDeviceConfigurator] Creating slave: " << entry.name);
 
-        std::shared_ptr<ecat_master::EthercatDevice> slave = nullptr;
         std::shared_ptr<EthercatDeviceRosBase> slave_ros = nullptr;
 
-        switch (entry.type) {
-        case EthercatSlaveType::Maxon:
-        {
-            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-            slave = maxon::Maxon::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
-            slave_ros = std::make_shared<MaxonDeviceRos>(m_nh, slave, entry);
-        }
-            break;
-        case EthercatSlaveType::Nanotec:
-        {
-            std::string configuration_file_path = handleFilePath(entry.config_file_path,m_setup_file_path);
-            slave = nanotec::Nanotec::deviceFromFile(configuration_file_path, entry.name, entry.ethercat_address);
-            slave_ros = std::make_shared<NanotecDeviceRos>(m_nh, slave, entry);
-        }
-            break;
-
-        default:
-            throw std::runtime_error("[EthercatDeviceConfigurator] Not existing EthercatSlaveType passed");
-            break;
-
-
-        }
+        slave_ros = EthercatDeviceFactory::createDevice(m_nh, entry);
         m_slaves.push_back(slave_ros);
         m_slave_to_entry_map.insert({slave_ros, entry});
     }
