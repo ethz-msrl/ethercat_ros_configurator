@@ -7,6 +7,9 @@ Maxon:
   min_number_of_successful_target_state_readings: 5
   display_error_codes: true
   disable_configuration_on_startup: false
+  interpolation_time_period_ms: 1 # in ms. "0" disables demand value interpolation.
+  # > 0 enables demand value interpolation. Target Position (and offset), Velocity
+  # (and offset) are written cyclically with the interpolation time period.
 
 Reading:
   force_append_equal_error: true
