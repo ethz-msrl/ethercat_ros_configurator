@@ -39,6 +39,7 @@ class TestReferenceGenerator:
         self.duration = rospy.get_param('~duration', 10.0)
         self.sample_rate = rospy.get_param('~sample_rate', 100.0)
         self.plot = rospy.get_param('~plot', True)
+        self.plot_dpi = rospy.get_param('~plot_dpi', 300)
         self.save_data = rospy.get_param('~save_data', False)
         self.save_path = rospy.get_param('~save_data_path') + "/"
         self.command_pub = rospy.Publisher(self.command_topic, MotorCtrlMessage, queue_size=10)
@@ -104,6 +105,8 @@ class TestReferenceGenerator:
         # TODO: Add support for velocity and torque
         self.command_msg.header.stamp = rospy.Time.now()
         self.command_msg.targetPosition = int(self._current_sample)
+        self.command_msg.operationMode = MotorCtrlMessage.NANOTEC_OPERATION_MODE_CYCLIC_SYNCHRONOUS_POSITION
+        # Same as MotorCtrlMessage.MAXON_EPSO4_OPERATION_MODE_CYCLIC_SYNCHRONOUS_POSITION
 
     def publish_command_thread(self):
         rate = rospy.Rate(self.sample_rate)
@@ -200,7 +203,7 @@ class TestReferenceGenerator:
         fig = plt.gcf()
         fig.set_size_inches(18.5, 5.5)
         if self.save_data:
-            plt.savefig(self.save_path + f"{self.name}_{self._data_prefix}_plot.png", dpi=600)
+            plt.savefig(self.save_path + f"{self.name}_{self._data_prefix}_plot.png", dpi=self.plot_dpi)
             print(f"Plot saved to {self.save_path + f'{self.name}_{self._data_prefix}_plot.png'}")
         plt.show()
 

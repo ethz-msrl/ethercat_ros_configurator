@@ -19,6 +19,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(catkin REQUIRED)
 find_package(roscpp REQUIRED)
 find_package(rospy REQUIRED)
+find_package(ethercat_motor_msgs REQUIRED)
 
 find_package(maxon_epos_ethercat_sdk )
 find_package(nanotec_ethercat_sdk )
