@@ -1,32 +1,32 @@
 ethercat_master:
-  time_step:                          0.001 # in seconds
+  time_step:                          0.005 # in seconds
   update_rate_too_low_warn_threshold: 50
   ros_namespace:                      ethercat_master
 
 ethercat_devices:
-  - type:               Nanotec
-    name:               Nanotec_Motor_1
-    configuration_file: device_configurations/nanotec.yaml
-    ethercat_bus:       enx782d7e117ff5 # eth0 usually
-    ethercat_address:   1
-    thread_frequency:   100
-    initial_mode_of_operation: 8 # Check mode maps in EthercatDeviceUtils.hpp
-
-  - type:               Nanotec
-    name:               Nanotec_Motor_2
-    configuration_file: device_configurations/nanotec.yaml
-    ethercat_bus:       enx782d7e117ff5
-    ethercat_address:   2
-    thread_frequency:   100
-    initial_mode_of_operation: 8 
-
-  # - type:               Maxon
-  #   name:               Maxon_EyeSim_Small
-  #   configuration_file: device_configurations/maxon_eyesim_small.yaml
-  #   ethercat_bus:       enp2s0 # enx782d7e117ff5
+  # - type:               Nanotec
+  #   name:               Nanotec_Motor_1
+  #   configuration_file: device_configurations/nanotec.yaml
+  #   ethercat_bus:       enx782d7e117ff5 # eth0 usually
   #   ethercat_address:   1
   #   thread_frequency:   100
   #   initial_mode_of_operation: 8 # Check mode maps in EthercatDeviceUtils.hpp
+
+  # - type:               Nanotec
+  #   name:               Nanotec_Motor_2
+  #   configuration_file: device_configurations/nanotec.yaml
+  #   ethercat_bus:       enx782d7e117ff5
+  #   ethercat_address:   2
+  #   thread_frequency:   100
+  #   initial_mode_of_operation: 8 
+
+  - type:               Maxon
+    name:               Maxon_EyeSim_Small
+    configuration_file: device_configurations/maxon_eyesim_small.yaml
+    ethercat_bus:       enp2s0 # enx782d7e117ff5
+    ethercat_address:   1
+    thread_frequency:   100
+    initial_mode_of_operation: 8 # Check mode maps in EthercatDeviceUtils.hpp
 
   # - type:               Maxon
   #   name:               Maxon_Test_Motor

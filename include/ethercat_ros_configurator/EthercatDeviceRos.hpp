@@ -1,5 +1,3 @@
-#pragma once
-
 #include <ethercat_ros_configurator/EthercatDeviceConfigurator.hpp>
 #include <ethercat_ros_configurator/EthercatDeviceUtils.hpp>
 
