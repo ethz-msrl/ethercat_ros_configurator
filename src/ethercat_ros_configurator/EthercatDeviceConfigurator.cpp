@@ -32,9 +32,6 @@
 
 using namespace EthercatRos;
 
-// ETHERCAT_ROS_REGISTER_DEVICE(EthercatSlaveType::Maxon, MaxonDeviceRos);
-// ETHERCAT_ROS_REGISTER_DEVICE(EthercatSlaveType::Nanotec, NanotecDeviceRos);
-
 static bool path_exists(std::string& path)
 {
     #if __GNUC__ < 8
@@ -151,20 +148,21 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
             //type - entry
             if(child["type"])
             {
-                auto type_str = child["type"].as<std::string>();
+                // auto type_str = child["type"].as<std::string>();
+                entry.type = child["type"].as<std::string>();
 
-                if(type_str == "Maxon")
-                {
-                    entry.type = EthercatSlaveType::Maxon;
-                }
-                else if(type_str == "Nanotec")
-                {
-                    entry.type = EthercatSlaveType::Nanotec;
-                }
-                else
-                {
-                    throw std::runtime_error("[EthercatDeviceConfigurator] " +type_str + " is an undefined type of ethercat device");
-                }
+                // if(type_str == "Maxon")
+                // {
+                //     entry.type = EthercatSlaveType::Maxon;
+                // }
+                // else if(type_str == "Nanotec")
+                // {
+                //     entry.type = EthercatSlaveType::Nanotec;
+                // }
+                // else
+                // {
+                //     throw std::runtime_error("[EthercatDeviceConfigurator] " +type_str + " is an undefined type of ethercat device");
+                // }
             }
             else
             {

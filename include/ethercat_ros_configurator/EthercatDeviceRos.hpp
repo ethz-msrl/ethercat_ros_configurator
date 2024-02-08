@@ -13,16 +13,20 @@
 
 namespace EthercatRos{
 
-enum class EthercatSlaveType
-{
+typedef std::string EthercatSlaveType;
+
+/**
+ * @brief An enum to identify what the type of device is, for eg: MotorController, Sensor,
+ * etc. A utility enum which might be useful in the future expansions to add new devices.
+*/
+enum class EthercatDeviceClass{
     NA,
-    Maxon,
-    Nanotec
+    MotorController
 };
 
 struct EthercatSlaveEntry
 {
-    EthercatSlaveType type = EthercatSlaveType::NA;
+    EthercatSlaveType type = "NA";
     std::string name = "";
     std::string config_file_path = "";
 
@@ -42,6 +46,7 @@ class EthercatDeviceRosBase{
         virtual std::string getName() const = 0;
         virtual void abort() = 0;
         virtual void createDevice() = 0;
+        virtual EthercatDeviceClass getDeviceClass() = 0;
 };
 
 template <class DeviceClass>
@@ -162,6 +167,10 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
         virtual void createDevice() override {
             ROS_ERROR("EthercatDeviceRos::createDevice() not implemented for this device type.");
         }
+
+        virtual EthercatDeviceClass getDeviceClass() override {
+            return EthercatDeviceClass::NA;
+        }
         
     protected:
         std::unique_ptr<std::thread> worker_thread_ptr_;
@@ -179,27 +188,6 @@ class EthercatDeviceRos : public EthercatDeviceRosBase{
             // Specify this in device specific specializations of workerDispatch().
 
             ROS_ERROR("EthercatDeviceRos::workerDispatch() not implemented for this device type.");
-        }
-
-        bool checkSlaveTypeAvailability(){
-            if (device_info_.type == EthercatSlaveType::Maxon) {
-                if (device_ptr_ == nullptr) {
-                    ROS_ERROR_STREAM("Maxon '" << device_info_.name << "' pointer not available to device class.");
-                    return false;
-                }
-                return true;
-            }
-            else if (device_info_.type == EthercatSlaveType::Nanotec) {
-                if (device_ptr_ == nullptr) {
-                    ROS_ERROR_STREAM("Nanotec '" << device_info_.name << "' pointer not available to device class.");
-                    return false;
-                }
-                return true;
-            }
-            else {
-                ROS_ERROR_STREAM("[EthercatDeviceRos::checkSlaveTypeAvailability()] Ethercat ROS configurator not implemented for this device type.");
-                return false;
-            }
         }
 
         /**
@@ -258,12 +246,8 @@ class EthercatDeviceFactory {
             if(device_constructors_ == nullptr){
                 device_constructors_ = new std::map<EthercatSlaveType, DeviceCreator>();
             }
-            if(device_constructors_->find(type) == device_constructors_->end()){
-                (*device_constructors_)[type] = constructor;
-            }
-            else{
-                ROS_ERROR_STREAM("[EthercatDeviceFactory::registerDevice] Tried to register a device type that was already registered.");
-            }
+            
+            (*device_constructors_)[type] = constructor;
         }
 
         static std::shared_ptr<EthercatDeviceRosBase> createDevice(
@@ -323,7 +307,6 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
     
 
     while(!abrt){
-        if (device_info_.type == EthercatSlaveType::Maxon) {
             if(!device_enabled_){
                 device_ptr_->setDriveStateViaPdo(maxon::DriveState::OperationEnabled, false);
                 // Small delay to allow the PDO state change flag to be set. Due to the min number
@@ -377,11 +360,6 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
             }
 
             loop_rate.sleep();
-        }
-        else{
-            ROS_ERROR("[EthercatDeviceRos::workerDispatch] Device type and template specialization mismatch.");
-            checkSlaveTypeAvailability();
-        }
     }
     worker_loop_running_ = false;
     return;
@@ -392,10 +370,15 @@ void EthercatDeviceRos<maxon::Maxon>::createDevice(){
     device_ptr_ = maxon::Maxon::deviceFromFile(device_info_.config_file_path, device_info_.name, device_info_.ethercat_address);
 }
 
+template<>
+EthercatDeviceClass EthercatDeviceRos<maxon::Maxon>::getDeviceClass(){
+    return EthercatDeviceClass::MotorController;
+}
+
 typedef EthercatDeviceRos<maxon::Maxon> MaxonDeviceRos;
 
 // Don't forget to register the class
-ETHERCAT_ROS_REGISTER_DEVICE(EthercatSlaveType::Maxon, MaxonDeviceRos);
+ETHERCAT_ROS_REGISTER_DEVICE("Maxon", MaxonDeviceRos);
 // <-------- Maxon
 
 // --------> Nanotec
@@ -423,59 +406,53 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
     last_command_msg_ptr_->profileDeceleration = 0;   
 
     while(!abrt){
-        if (device_info_.type == EthercatSlaveType::Nanotec) {
-            if(!device_enabled_){
-                device_ptr_->setDriveStateViaPdo(nanotec::DriveState::OperationEnabled, false);
-                // Small delay to allow the PDO state change flag to be set. Due to the min number
-                // of succesful PDO state readings check taking some time. Increase delay with min
-                // number of succesful PDO state readings (param).
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            }
-
-            nanotec::Reading reading;
-            device_ptr_->getReading(reading);
-            reading_msg_.header.stamp = ros::Time::now();
-            reading_msg_.actualPosition = reading.getActualPositionRaw();
-            reading_msg_.actualVelocity = reading.getActualVelocityRaw();
-            reading_msg_.statusword = reading.getRawStatusword();
-            reading_msg_.demandTorque = reading.getDemandTorqueRaw();
-            reading_msg_.actualTorque = reading.getActualTorqueRaw();
-            reading_msg_.actualFollowingError = reading.getActualFollowingErrorRaw();
-            reading_pub_ptr_->publish(reading_msg_);
-
-
-            // set commands if we can
-            if (device_ptr_->lastPdoStateChangeSuccessful() &&
-                    device_ptr_->getReading().getDriveState() == nanotec::DriveState::OperationEnabled)
-            {
-                // @todo: make mode of operation configurable
-
-                device_enabled_ = true;
-                nanotec::Command cmd;
-                cmd.setModeOfOperation(NanotecUtils::getModeOfOperation(last_command_msg_ptr_->operationMode));
-                lock.lock();
-                cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
-                cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
-                cmd.setTargetTorqueRaw(last_command_msg_ptr_->targetTorque);
-                cmd.setPositionOffsetRaw(last_command_msg_ptr_->positionOffset);
-                cmd.setTorqueOffsetRaw(last_command_msg_ptr_->torqueOffset);
-                cmd.setVelocityOffsetRaw(last_command_msg_ptr_->velocityOffset);
-                lock.unlock();
-
-                device_ptr_->stageCommand(cmd);
-            }
-            else
-            {
-                device_enabled_ = false;
-                ROS_WARN_STREAM("Nanotec '" << device_ptr_->getName()
-                                                                    << "': " << device_ptr_->getReading().getDriveState());
-            }
-            loop_rate.sleep();
+        if(!device_enabled_){
+            device_ptr_->setDriveStateViaPdo(nanotec::DriveState::OperationEnabled, false);
+            // Small delay to allow the PDO state change flag to be set. Due to the min number
+            // of succesful PDO state readings check taking some time. Increase delay with min
+            // number of succesful PDO state readings (param).
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        else{
-            ROS_ERROR("[EthercatDeviceRos::workerDispatch] Device type and template specialization mismatch.");
-            checkSlaveTypeAvailability();
+
+        nanotec::Reading reading;
+        device_ptr_->getReading(reading);
+        reading_msg_.header.stamp = ros::Time::now();
+        reading_msg_.actualPosition = reading.getActualPositionRaw();
+        reading_msg_.actualVelocity = reading.getActualVelocityRaw();
+        reading_msg_.statusword = reading.getRawStatusword();
+        reading_msg_.demandTorque = reading.getDemandTorqueRaw();
+        reading_msg_.actualTorque = reading.getActualTorqueRaw();
+        reading_msg_.actualFollowingError = reading.getActualFollowingErrorRaw();
+        reading_pub_ptr_->publish(reading_msg_);
+
+
+        // set commands if we can
+        if (device_ptr_->lastPdoStateChangeSuccessful() &&
+                device_ptr_->getReading().getDriveState() == nanotec::DriveState::OperationEnabled)
+        {
+            // @todo: make mode of operation configurable
+
+            device_enabled_ = true;
+            nanotec::Command cmd;
+            cmd.setModeOfOperation(NanotecUtils::getModeOfOperation(last_command_msg_ptr_->operationMode));
+            lock.lock();
+            cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
+            cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
+            cmd.setTargetTorqueRaw(last_command_msg_ptr_->targetTorque);
+            cmd.setPositionOffsetRaw(last_command_msg_ptr_->positionOffset);
+            cmd.setTorqueOffsetRaw(last_command_msg_ptr_->torqueOffset);
+            cmd.setVelocityOffsetRaw(last_command_msg_ptr_->velocityOffset);
+            lock.unlock();
+
+            device_ptr_->stageCommand(cmd);
         }
+        else
+        {
+            device_enabled_ = false;
+            ROS_WARN_STREAM("Nanotec '" << device_ptr_->getName()
+                                                                << "': " << device_ptr_->getReading().getDriveState());
+        }
+        loop_rate.sleep();
     }
     worker_loop_running_ = false;
     return;
@@ -486,9 +463,14 @@ void EthercatDeviceRos<nanotec::Nanotec>::createDevice(){
     device_ptr_ = nanotec::Nanotec::deviceFromFile(device_info_.config_file_path, device_info_.name, device_info_.ethercat_address);
 }
 
+template<>
+EthercatDeviceClass EthercatDeviceRos<nanotec::Nanotec>::getDeviceClass(){
+    return EthercatDeviceClass::MotorController;
+}
+
 typedef EthercatDeviceRos<nanotec::Nanotec> NanotecDeviceRos;
 
-ETHERCAT_ROS_REGISTER_DEVICE(EthercatSlaveType::Nanotec, NanotecDeviceRos);
+ETHERCAT_ROS_REGISTER_DEVICE("Nanotec", NanotecDeviceRos);
 // <-------- Nanotec
 
 } // namespace EthercatRos
