@@ -59,8 +59,17 @@ include_directories(
   ${nanotec_ethercat_sdk_INCLUDE_DIRS}
 )
 
+set(SRC_FILES
+  # include files
+  include/ethercat_ros_configurator/EthercatDeviceConfigurator.hpp
+  include/ethercat_ros_configurator/EthercatDeviceRos.hpp
+  include/ethercat_ros_configurator/EthercatDeviceUtils.hpp
 
-file(GLOB_RECURSE SRC_FILES ./src/*.c*)
+  # source files
+  src/ethercat_ros_configurator/EthercatDeviceConfigurator.cpp
+  src/ethercat_ros_configurator/Maxon.cpp
+  src/ethercat_ros_configurator/Nanotec.cpp
+)
 
 add_library(${PROJECT_NAME}
   ${SRC_FILES}

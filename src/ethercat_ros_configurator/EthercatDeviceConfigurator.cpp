@@ -14,12 +14,6 @@
 
 #include "ethercat_ros_configurator/EthercatDeviceConfigurator.hpp"
 
-/*Maxon*/
-#include "maxon_epos_ethercat_sdk/Maxon.hpp"
-
-/*Nanotec*/
-#include "nanotec_ethercat_sdk/Nanotec.hpp"
-
 /*yaml-cpp*/
 #include "yaml-cpp/yaml.h"
 
@@ -31,6 +25,8 @@
 #endif
 
 using namespace EthercatRos;
+
+std::map<EthercatSlaveType, EthercatDeviceFactory::DeviceCreator> *EthercatDeviceFactory::device_constructors_ = nullptr;
 
 static bool path_exists(std::string& path)
 {
