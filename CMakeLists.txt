@@ -24,12 +24,24 @@ find_package(ethercat_motor_msgs REQUIRED)
 find_package(maxon_epos_ethercat_sdk )
 find_package(nanotec_ethercat_sdk )
 
+set(SRC_FILES
+  # include files
+  include/ethercat_ros_configurator/EthercatDeviceConfigurator.hpp
+  include/ethercat_ros_configurator/EthercatDeviceRos.hpp
+
+  # source files
+  src/ethercat_ros_configurator/EthercatDeviceConfigurator.cpp
+)
+
 if(maxon_epos_ethercat_sdk_FOUND)
   add_definitions(-D_MAXON_FOUND_)
   set(PACKAGE_DEPENDENCIES
     ${PACKAGE_DEPENDENCIES}
     maxon_epos_ethercat_sdk
   )
+  set(SRC_FILES
+    ${SRC_FILES}
+    src/ethercat_ros_configurator/Maxon.cpp)
 endif()
 
 if(nanotec_ethercat_sdk_FOUND)
@@ -38,6 +50,9 @@ if(nanotec_ethercat_sdk_FOUND)
     ${PACKAGE_DEPENDENCIES}
     nanotec_ethercat_sdk
   )
+  set(SRC_FILES
+    ${SRC_FILES}
+    src/ethercat_ros_configurator/Nanotec.cpp)
 endif()
 
 foreach(sdk ${PACKAGE_DEPENDENCIES})
@@ -57,18 +72,6 @@ include_directories(
   include
   ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
   ${nanotec_ethercat_sdk_INCLUDE_DIRS}
-)
-
-set(SRC_FILES
-  # include files
-  include/ethercat_ros_configurator/EthercatDeviceConfigurator.hpp
-  include/ethercat_ros_configurator/EthercatDeviceRos.hpp
-  include/ethercat_ros_configurator/EthercatDeviceUtils.hpp
-
-  # source files
-  src/ethercat_ros_configurator/EthercatDeviceConfigurator.cpp
-  src/ethercat_ros_configurator/Maxon.cpp
-  src/ethercat_ros_configurator/Nanotec.cpp
 )
 
 add_library(${PROJECT_NAME}
