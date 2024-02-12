@@ -1,4 +1,4 @@
-#include <ethercat_ros_configurator/EthercatDeviceUtils.hpp>
+#include <ethercat_sdk_master/EthercatMaster.hpp>
 
 #include <ethercat_motor_msgs/MotorCtrlMessage.h>
 #include <ethercat_motor_msgs/MotorStatusMessage.h>

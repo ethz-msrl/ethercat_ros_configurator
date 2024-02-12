@@ -1,7 +1,33 @@
 #include <ethercat_ros_configurator/EthercatDeviceRos.hpp>
-
+#include <maxon_epos_ethercat_sdk/Maxon.hpp>
 
 ETHERCAT_ROS_NAMESPACE_BEGIN
+
+class MaxonUtils{
+    public:
+        /**
+         * @brief operation mode mapping for maxon. It is recommended to change the way changing
+         * the mode of operation is handled. This is a temporary solution because this is what 
+         * I thought was feasible with the current class heirarchies and template specializations
+         * while avoiding inheritances from specialized classes.
+        */
+        static maxon::ModeOfOperationEnum getModeOfOperation(int mode_of_operation){
+            std::map<int, maxon::ModeOfOperationEnum> mode_of_operation_map = {
+                    {0, maxon::ModeOfOperationEnum::NA},
+                    {1, maxon::ModeOfOperationEnum::ProfiledPositionMode}, // default for empty msg
+                    {3, maxon::ModeOfOperationEnum::ProfiledVelocityMode},
+                    {6, maxon::ModeOfOperationEnum::HomingMode},
+                    {8, maxon::ModeOfOperationEnum::CyclicSynchronousPositionMode},
+                    {9, maxon::ModeOfOperationEnum::CyclicSynchronousVelocityMode},
+                    {10, maxon::ModeOfOperationEnum::CyclicSynchronousTorqueMode}
+            };
+            if(mode_of_operation_map.find(mode_of_operation) != mode_of_operation_map.end()){
+                return mode_of_operation_map[mode_of_operation];
+            }
+            ROS_ERROR_STREAM("[EthercatDeviceRos::getModeOfOperation] Mode of operation not found. Returning NA[0]");
+            return maxon::ModeOfOperationEnum::NA;
+        }
+};
 
 template <>
 void EthercatDeviceRos<maxon::Maxon>::worker(){
@@ -22,8 +48,6 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
     last_command_msg_ptr_->motionProfileType = 0;
     last_command_msg_ptr_->profileAcceleration = 0;
     last_command_msg_ptr_->profileDeceleration = 0;
-
-    
 
     while(!abrt){
             if(!device_enabled_){
