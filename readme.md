@@ -109,6 +109,15 @@ The following device SDKs are supported:
 
 This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace. Note that the package only compiles the class object for a device if its SDK is found by cmake. Check out the warning messages in the build log to see which SDKs were found by cmake. For example: if the Nanotec and the Maxon SDKs are found, the following is the output of the build log:
 ```bash
+Starting  >>> ethercat_ros_configurator                                                                                                                                        
+_______________________________________________________________________________________________________________________________________________________________________________
+Warnings   << ethercat_ros_configurator:cmake /home/neelaksh/ethercat_ws/logs/ethercat_ros_configurator/build.cmake.000.log                                                    
+Found EtherCAT device sdk: maxon_epos_ethercat_sdk
+Found EtherCAT device sdk: nanotec_ethercat_sdk
+cd /home/neelaksh/ethercat_ws/build/ethercat_ros_configurator; catkin build --get-env ethercat_ros_configurator | catkin env -si  /usr/bin/cmake /home/neelaksh/ethercat_ws/src/ethercat_ros_configurator --no-warn-unused-cli -DCATKIN_DEVEL_PREFIX=/home/neelaksh/ethercat_ws/devel/.private/ethercat_ros_configurator -DCMAKE_INSTALL_PREFIX=/home/neelaksh/ethercat_ws/install; cd -
+
+...............................................................................................................................................................................
+_______________________________________________________________________________________________________________________________________________________________________________
 
 ```
 
