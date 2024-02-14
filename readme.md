@@ -176,9 +176,9 @@ At the time of writing, the package is only configured for motor controllers. Th
 ### Wiring the EtherCAT Network
 Check the [EtherCAT installation guide](https://www.ethercat.org/download/documents/ETG1600_V1i0i4_G_R_InstallationGuideline.pdf) for more details on setting up the physical connections between the devices and a ROS enabled PC.Please note a Ethernet port should be available on the ROS machine. A basic linear bus connection topoloy is achieved as follows: One ethernet wire is connected from the ROS machine's Ethernet port to the "input" EtherCAT port of the first device. Then the "output" EtherCAT port of the first device is connected to the "input" EtherCAT port of the second device and so on. This is continued until the last device is reached whose "output" port is left unconnected. The dangling "output" port is handled internally by the EtherCAT communication protocol. A sample diagram of such a connection topology is given below:
 
-![Sample Linear EtherCAT Connection Topology](https://www.acontis.com/files/blog/What%20is%20EtherCAT/Functional_Principal_hd_60fps_v4.gif)
+![Sample Linear EtherCAT Connection Topology](images/Functional_Principal_hd_60fps_v4.gif)
 
-Image Source: [Acontis Technologies](https://www.acontis.com/en/what-is-ethercat-communication-protocol.html). The reader is encouraed to refer to this link for gaining more understanding of the EtherCAT communication protocol.
+Image Source: [Acontis Technologies](https://www.acontis.com/en/what-is-ethercat-communication-protocol.html). The reader is encouraged to refer to this link for gaining more understanding of the EtherCAT communication protocol.
 
 Note that the network might benefit from circular connection topologies because of one layer of redundancy against phyical connection faults. However, this would require two ports in the ROS machine to serve as a part of the same EtherCAT bus; however, this is not supported by the package at the time of writing.
 
