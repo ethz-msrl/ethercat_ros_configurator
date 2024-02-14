@@ -24,6 +24,7 @@ This package acts as a configurator for EtherCAT device SDKs built on top of the
     - [Important Note On EtherCAT Address](#important-note-on-ethercat-address)
     - [Command and Feedback Data](#command-and-feedback-data)
     - [Wiring the EtherCAT Network](#wiring-the-ethercat-network)
+    - [Running the ROS Node](#running-the-ros-node)
 - [API Documentation and Implementation Details](#api-documentation-and-implementation-details)
 
 
@@ -74,7 +75,7 @@ git clone https://github.com/leggedrobotics/soem_interface.git
 The specific version of the package used while testing can be found at [soem_interface](https://github.com/leggedrobotics/soem_interface/tree/7b7bed29d8dfe1d0ef17c8e42a4aab07b6b393df). At the time of writing this readme, the latest version of the package should work, if it fails, checkout the specific commit hash in the link after cloning the repository.
 
 ### EtherCAT SDK Master
-This package presents a nice base class for implementation of EtherCAT slave devices through the [SOEM Library](https://github.com/OpenEtherCATsociety/SOEM.git). Add the package to your workspace by running the following commands:
+This package presents a nice base class for implementation of EtherCAT slave devices by providing high level EtherCAT functionalities over the [SOEM Library](https://github.com/OpenEtherCATsociety/SOEM.git). Add the package to your workspace by running the following commands:
 ```bash
 cd /path/to/your/catkin/workspace/src
 git clone https://github.com/leggedrobotics/ethercat_sdk_master.git
@@ -193,6 +194,15 @@ Check the [EtherCAT installation guide](https://www.ethercat.org/download/docume
 Image Source: [Acontis Technologies](https://www.acontis.com/en/what-is-ethercat-communication-protocol.html). The reader is encouraged to refer to this link for gaining a better understanding of the EtherCAT communication protocol.
 
 Note that the network might benefit from circular connection topologies because of one layer of redundancy against phyical connection faults. However, this would require two ports in the ROS machine to serve as a part of the same EtherCAT bus; however, this is not supported by the package at the time of writing.
+
+### Running the ROS Node
+After setting up the `config/setup.yaml` file, you can run the ROS node by running the following command:
+```bash
+roslaunch ethercat_ros_configurator ethercat_ros_configurator.launch <path_to_config_file>
+```
+Replace `<path_to_config_file>` with the path to the `config/setup.yaml` file. The path can either be absolute or relative to the working directory when launching the rosnode.
+
+<span style="color:red">IMPORTANT: </span> Please note that running the EtherCAT master node requires root privilages because of the low level access to the Ethernet port. One way to achieve this is to launch the node while logged in as root in the terminal. This will require sourcing the ROS environment variables in the root shell. Sourcing the ROS environment in root shell is not recommended. A better way to achieve this will be through implementing a [ethercat_grant](https://github.com/shadow-robot/ethercat_grant) like functionality in the package. This is currently not a feature of the package.
 
 # API Documentation and Implementation Details
 Refer to the following url for detailed information on how to integrate a new device SDK with the package, and to understand important implementation details as a device SDK developer: [EtherCAT ROS Configurator API Documentation]().
