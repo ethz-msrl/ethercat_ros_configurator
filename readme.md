@@ -18,7 +18,7 @@ This package acts as a configurator for EtherCAT device SDKs built on top of the
   - [Step 2: Install Device SDKs](#step-2-install-device-sdks)
     - [Supported Device SDKs](#supported-device-sdks)
   - [Step 3: Install EtherCAT ROS Configurator](#step-3-install-ethercat-ros-configurator)
-- [How to use ?](#how-to-use-)
+- [Usage Instructions](#usage-instructions)
     - [`ethercat_master` Section](#ethercat_master-section)
     - [`ethercat_devices` Section](#ethercat_devices-section)
     - [Important Note On EtherCAT Address](#important-note-on-ethercat-address)
@@ -118,7 +118,7 @@ cd ..
 catkin build
 ```
 
-# How to use ?
+# Usage Instructions
 Before following the instructions below, make sure you have built your catkin workspace alongwith the SDKs of all the EtherCAT devices you intend to use. The following steps will guide you through the process of using the package to configure your EtherCAT network. The EtherCAT ros configurator prepares a network of devices through the `config/setup.yaml` file. An example of the setup file for an EtherCAT bus with 2 Nanotec C5E-1-21 motor drivers followed by a Maxon EPOS4 driver is given below:
 ```yaml
 ethercat_master:
@@ -174,7 +174,13 @@ At the time of writing, the package is only configured for motor controllers. Th
 - `/<ethercat_master_ros_namespace>/<device_name>/reading`: The feedback topic for the device. The feedback topic is used to receive feedback from the device. The message type for the feedback topic is specific to the device and should be documented in the respective device SDK's documentation. For the currently supported motor controllers, it is `ethercat_motor_msgs::MotorStatusMessage`. The device class updates the feedback data to this topic at the frequency specified in the `thread_frequency` parameter in the `ethercat_devices` section of the setup file.
 
 ### Wiring the EtherCAT Network
-Check the [EtherCAT installation guide](https://www.ethercat.org/download/documents/ETG1600_V1i0i4_G_R_InstallationGuideline.pdf) for more details on setting up the physical connections between the devices and a ROS enabled PC.Please note a Ethernet port should be available on the ROS machine. A basic linear bus connection topoloy is achieved as follows: One ethernet wire is connected from the ROS machine's Ethernet port to the "input" EtherCAT port of the first device. Then the "output" EtherCAT port of the first device is connected to the "input" EtherCAT port of the second device and so on. This is continued until the last device is reached whose "output" port is left unconnected. The dangling "output" port is handled internally by the EtherCAT communication protocol. Note that the network might benefit from circular connection topologies because of one layer of redundancy against phyical connection faults. However, this would require two ports in the ROS machine to serve as a part of the same EtherCAT bus; however, this is not supported by the package at the time of writing.
+Check the [EtherCAT installation guide](https://www.ethercat.org/download/documents/ETG1600_V1i0i4_G_R_InstallationGuideline.pdf) for more details on setting up the physical connections between the devices and a ROS enabled PC.Please note a Ethernet port should be available on the ROS machine. A basic linear bus connection topoloy is achieved as follows: One ethernet wire is connected from the ROS machine's Ethernet port to the "input" EtherCAT port of the first device. Then the "output" EtherCAT port of the first device is connected to the "input" EtherCAT port of the second device and so on. This is continued until the last device is reached whose "output" port is left unconnected. The dangling "output" port is handled internally by the EtherCAT communication protocol. A sample diagram of such a connection topology is given below:
+
+![Sample Linear EtherCAT Connection Topology](https://www.acontis.com/files/blog/What%20is%20EtherCAT/Functional_Principal_hd_60fps_v4.gif)
+
+Image Source: [Acontis Technologies](https://www.acontis.com/en/what-is-ethercat-communication-protocol.html). The reader is encouraed to refer to this link for gaining more understanding of the EtherCAT communication protocol.
+
+Note that the network might benefit from circular connection topologies because of one layer of redundancy against phyical connection faults. However, this would require two ports in the ROS machine to serve as a part of the same EtherCAT bus; however, this is not supported by the package at the time of writing.
 
 # API Documentation and Implementation Details
 Refer to the following url for detailed information on how to integrate a new device SDK with the package, and to understand important implementation details as a device SDK developer: [EtherCAT ROS Configurator API Documentation]().
