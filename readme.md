@@ -107,7 +107,10 @@ The following device SDKs are supported:
 | Nanotec EtherCAT SDK | [Insert URL here] | Motor Controller | Designed for Nanotec C5E-1-21 motor controller | [Insert License here] | Nanotec |
 | Maxon EPOS EtherCAT SDK | [Insert URL here] | Motor Controller | Designed for Maxon EPOS4 motor controller | [Insert License here] | Maxon |
 
-This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace.
+This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace. Note that the package only compiles the class object for a device if its SDK is found by cmake. Check out the warning messages in the build log to see which SDKs were found by cmake. For example: if the Nanotec and the Maxon SDKs are found, the following is the output of the build log:
+```bash
+
+```
 
 ## Step 3: Install EtherCAT ROS Configurator
 Finally, clone this repository into your catkin workspace and build the workspace. You can do this by running the following commands:
@@ -178,7 +181,7 @@ Check the [EtherCAT installation guide](https://www.ethercat.org/download/docume
 
 <img src="images/Functional_Principal_hd_60fps_v4.gif?raw=true"/>
 
-Image Source: [Acontis Technologies](https://www.acontis.com/en/what-is-ethercat-communication-protocol.html). The reader is encouraged to refer to this link for gaining more understanding of the EtherCAT communication protocol.
+Image Source: [Acontis Technologies](https://www.acontis.com/en/what-is-ethercat-communication-protocol.html). The reader is encouraged to refer to this link for gaining a better understanding of the EtherCAT communication protocol.
 
 Note that the network might benefit from circular connection topologies because of one layer of redundancy against phyical connection faults. However, this would require two ports in the ROS machine to serve as a part of the same EtherCAT bus; however, this is not supported by the package at the time of writing.
 
