@@ -191,7 +191,7 @@ Check the [EtherCAT installation guide](https://www.ethercat.org/download/docume
 
 <img src="images/Functional_Principal_hd_60fps_v4.gif?raw=true"/>
 
-Image Source: [Acontis Technologies](https://www.acontis.com/en/what-is-ethercat-communication-protocol.html). The reader is encouraged to refer to this link for gaining a better understanding of the EtherCAT communication protocol.
+*Image Source: [Acontis Technologies](https://www.acontis.com/en/what-is-ethercat-communication-protocol.html). The reader is encouraged to refer to this link for gaining a better understanding of the EtherCAT communication protocol.*
 
 Note that the network might benefit from circular connection topologies because of one layer of redundancy against phyical connection faults. However, this would require two ports in the ROS machine to serve as a part of the same EtherCAT bus; however, this is not supported by the package at the time of writing.
 
