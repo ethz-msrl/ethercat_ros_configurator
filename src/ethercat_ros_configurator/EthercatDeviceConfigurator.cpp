@@ -1,6 +1,9 @@
 /*
  ** Copyright (c) 2024, Multi-Scale Robotics Lab - ETH Zürich
+ ** Neelaksh Singh
+ **
  ** Copyright (c) 2021, Robotic Systems Lab - ETH Zürich
+ ** Lennart Nachtigall, Jonas Junger
  **
  ** Redistribution and use in source and binary forms, with or without
  ** modification, are permitted provided that the following conditions are met:
@@ -28,12 +31,6 @@
  ** OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file EthercatDeviceConfigurator.cpp
- * @author 
- * Modified By: Neelaksh Singh
- * Created By: Lennart Nachtigall, Jonas Junger
- */
 
 #include "ethercat_ros_configurator/EthercatDeviceConfigurator.hpp"
 
