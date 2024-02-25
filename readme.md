@@ -23,9 +23,10 @@ This package acts as a configurator for EtherCAT device SDKs built on top of the
     - [`ethercat_devices` Section](#ethercat_devices-section)
     - [Important Note On EtherCAT Address](#important-note-on-ethercat-address)
     - [Command and Feedback Data](#command-and-feedback-data)
-    - [Wiring the EtherCAT Network](#wiring-the-ethercat-network)
-    - [Running the ROS Node](#running-the-ros-node)
-- [API Documentation and Implementation Details](#api-documentation-and-implementation-details)
+    - [Wiring The EtherCAT Network](#wiring-the-ethercat-network)
+    - [Running The ROS Node](#running-the-ros-node)
+    - [Root Access Requirement ](#root-access-requirement-)
+- [API Documentation \& Contributing To The Project](#api-documentation--contributing-to-the-project)
 
 
 # Installation
@@ -44,8 +45,8 @@ The following packages are required to be installed in your system in order to u
 - [ethercat_sdk_master](https://github.com/leggedrobotics/ethercat_sdk_master/tree/6b420bc1785cf26324aab62c79347b2a6e07924d)
 - [soem_interface](https://github.com/leggedrobotics/soem_interface/tree/7b7bed29d8dfe1d0ef17c8e42a4aab07b6b393df)
 - [message_logger](https://github.com/leggedrobotics/message_logger/tree/bdb867e57059f21d22f9454f6910920bfe5caac2)
-- [ethercat_motor_msgs](Dead link, will be updated soon)
-- yaml-cpp (Ubuntu 20.04 LTS system installed for [version 0.6](https://packages.ubuntu.com/focal/libyaml-cpp0.6))
+- [ethercat_motor_msgs](https://github.com/Ophthorobotics/ethercat_motor_msgs)
+- yaml-cpp ([version 0.6](https://packages.ubuntu.com/focal/libyaml-cpp0.6) ships with Ubuntu 20.04 LTS)
 
 ### ROS Noetic
 For installing ROS Noetic in Ubuntu 20.04 LTS, please refer to the [ROS Noetic Installation Guide](http://wiki.ros.org/noetic/Installation/Ubuntu). The packages have not been tested for ROS installations in other environments like WSL, Raspberry Pi, etc, therefore, user discretion is advised. Feel free to open an issue if you encounter any problems with other distributions, but receiving support for other distributions is not guaranteed.
@@ -91,7 +92,7 @@ git clone <link to the github page for ethercat_motor_msgs>
 ```
 
 ### Yaml-CPP
-The package uses the yaml-cpp library for parsing the YAML configuration files. The library is installed by default in Ubuntu 20.04 LTS. However, you should be able to install it by running the following command:
+The package uses the yaml-cpp library for parsing the YAML configuration files. [Version 0.6](https://packages.ubuntu.com/focal/libyaml-cpp0.6) of the library is installed by default in Ubuntu 20.04 LTS. However, you should be able to install it by running the following command:
 ```bash
 sudo apt-get install libyaml-cpp0.6
 ```
@@ -105,8 +106,8 @@ The following device SDKs are supported:
 
 | SDK Name    | URL    | Type    | Description    | License | Registration Name |
 |---------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
-| Nanotec EtherCAT SDK | [Insert URL here] | Motor Controller | Designed for Nanotec C5E-1-21 motor controller | [Insert License here] | Nanotec |
-| Maxon EPOS EtherCAT SDK | [Insert URL here] | Motor Controller | Designed for Maxon EPOS4 motor controller | [Insert License here] | Maxon |
+| Nanotec EtherCAT SDK | https://github.com/Ophthorobotics/nanotec_ethercat_sdk | Motor Controller | Designed for Nanotec C5E-1-21 motor controller | BSD-3-Clause | `Nanotec` |
+| Maxon EPOS EtherCAT SDK | https://github.com/leggedrobotics/maxon_epos_ethercat_sdk | Motor Controller | Designed for Maxon EPOS4 motor controller | BSD-3-Clause | `Maxon` |
 
 This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace. Note that the package only compiles the class object for a device if its SDK is found by cmake. Check out the warning messages in the build log to see which SDKs were found by cmake. For example: if the Nanotec and the Maxon SDKs are found, the following is the output of the build log:
 ```bash
@@ -173,7 +174,7 @@ This section lists the devices connected to the EtherCAT network. Each device is
 - `type`: The type of the device. This should be the name of the device SDK package. It is the name by which the device class is registered in the `EthercatDeviceFactory`. Check the respective device SDK's documentation for the correct name, or refer to the "Registration Name" column in the table in [Supported Device SDKs](#supported-device-sdks) section.
 - `name`: The name of the device. This is the name by which the device will be referred to in the ROS topics and services. It should be unique for each device.
 - `configuration_file`: The path to the configuration file for the device. This file should be in the `config` directory (or a subdirectory) of the package. The configuration file should contain the parameters required to configure the device. The parameters are specific to the device and should be documented in the respective device SDK's documentation.
-- `ethercat_bus`: The name of the EtherCAT bus to which the device is connected. This is usually `eth0`. For each ethernet port on the computer, a separate bus is created. Bus names can be found by running the `ifconfig` command in the terminal. Note that, for each different bus, a separate instance of the `EthercatMaster` class is created. Therefore, devices on different buses will not be able to communicate with each other and a separate master is created for each bus.
+- `ethercat_bus`: The name of the EtherCAT bus to which the device is connected. This is usually `eth0`. For each ethernet port on the computer, a separate bus is created. Bus names can be found by running the `ifconfig` command in the terminal. Note that, for each different bus, a separate instance of the `EthercatMaster` class is created. Therefore, devices on different buses will not be able to communicate with each other and a separate master is created for each bus. Any form of data exchange logic between two separate EtherCAT buses will have to be user defined, but is possible in theory since the same computational unit (running ROS) is in-charge of all the EtherCAT masters created using this package.
 - `ethercat_address`: The address of the device on the EtherCAT bus. The address should be unique for each device on the bus. It serves as the identifier for the device on the bus. Unlike several industrial PLCs this package doesn't support automatic assignment of address. See the important note after this list for more information related to the address.
 - `thread_frequency`: The frequency at which the device's own worker thread should run. This is the frequency at which the device's command and feedback data is updated. The frequency should be in Hz.
 - `initial_mode_of_operation`: The initial mode of operation for the device. The mode of operation is a parameter specific to the device and should be documented in the respective device SDK's documentation. The mode of operation is the mode in which the device operates. The mode of operation can be changed through the ROS interface. The initial mode of operation should be set to the mode in which the device should start operating. The value of 8 in the example script corresponds to the "Cyclic Synchronous Position Mode" for both Nanotec C5E-1-21 and Maxon EPOS4 motor controllers.
@@ -186,7 +187,7 @@ At the time of writing, the package is only configured for motor controllers. Th
 - `/<ethercat_master_ros_namespace>/<device_name>/command`: The command topic for the device. The command topic is used to send commands to the device. The message type for the command topic is specific to the device and should be documented in the respective device SDK's documentation. For the currently supported motor controllers, it is `ethercat_motor_msgs::MotorCtrlMessage`. The user can send commands to this topic at any rate which updates a local buffer in the device class. The worker thread of the device class then updates the command data to the device at the frequency specified in the `thread_frequency` parameter in the `ethercat_devices` section of the setup file.
 - `/<ethercat_master_ros_namespace>/<device_name>/reading`: The feedback topic for the device. The feedback topic is used to receive feedback from the device. The message type for the feedback topic is specific to the device and should be documented in the respective device SDK's documentation. For the currently supported motor controllers, it is `ethercat_motor_msgs::MotorStatusMessage`. The device class updates the feedback data to this topic at the frequency specified in the `thread_frequency` parameter in the `ethercat_devices` section of the setup file.
 
-### Wiring the EtherCAT Network
+### Wiring The EtherCAT Network
 Check the [EtherCAT installation guide](https://www.ethercat.org/download/documents/ETG1600_V1i0i4_G_R_InstallationGuideline.pdf) for more details on setting up the physical connections between the devices and a ROS enabled PC.Please note a Ethernet port should be available on the ROS machine. A basic linear bus connection topoloy is achieved as follows: One ethernet wire is connected from the ROS machine's Ethernet port to the "input" EtherCAT port of the first device. Then the "output" EtherCAT port of the first device is connected to the "input" EtherCAT port of the second device and so on. This is continued until the last device is reached whose "output" port is left unconnected. The dangling "output" port is handled internally by the EtherCAT communication protocol. A sample diagram of such a connection topology is given below:
 
 <img src="images/Functional_Principal_hd_60fps_v4.gif?raw=true"/>
@@ -195,14 +196,19 @@ Check the [EtherCAT installation guide](https://www.ethercat.org/download/docume
 
 Note that the network might benefit from circular connection topologies because of one layer of redundancy against phyical connection faults. However, this would require two ports in the ROS machine to serve as a part of the same EtherCAT bus; however, this is not supported by the package at the time of writing.
 
-### Running the ROS Node
-After setting up the `config/setup.yaml` file, you can run the ROS node by running the following command:
+### Running The ROS Node
+After setting up the [`config/setup.yaml`](config/setup.yaml) file, you can run the ROS node by running the following command:
 ```bash
 roslaunch ethercat_ros_configurator ethercat_ros_configurator.launch <path_to_config_file>
 ```
-Replace `<path_to_config_file>` with the path to the `config/setup.yaml` file. The path can either be absolute or relative to the working directory when launching the rosnode.
+Replace `<path_to_config_file>` with the path to the `config/setup.yaml` file. The path can either be absolute, or can be relative to the current bash working directory when launching the rosnode.
 
-<span style="color:red">IMPORTANT: </span> Please note that running the EtherCAT master node requires root privilages because of the low level access to the Ethernet port. One way to achieve this is to launch the node while logged in as root in the terminal. This will require sourcing the ROS environment variables in the root shell. Sourcing the ROS environment in root shell is not recommended. A better way to achieve this will be through implementing a [ethercat_grant](https://github.com/shadow-robot/ethercat_grant) like functionality in the package. This is currently not a feature of the package.
+### <span style="color:red">Root Access Requirement </span> 
+Please note that running the EtherCAT master node requires root privilages because of the low level access to the Ethernet port. One way to achieve this is to launch the node while logged in as root in the terminal. This will require sourcing the ROS environment variables in the root shell. Sourcing the ROS environment in root shell is not recommended. A better way to achieve this will be through implementing a [ethercat_grant](https://github.com/shadow-robot/ethercat_grant) like functionality in the package. This is not a feature of the package as of this release.
 
-# API Documentation and Implementation Details
-Refer to the following url for detailed information on how to integrate a new device SDK with the package, and to understand important implementation details as a device SDK developer: [EtherCAT ROS Configurator API Documentation]().
+# API Documentation & Contributing To The Project
+Refer to the following url for detailed information on how to integrate a new device SDK with the package, and to understand important implementation details as a device SDK developer: [EtherCAT ROS Configurator API Documentation](docs/api.md).
+
+We aim to make EtherCAT devices more accessible to the open source robotics community since it allows to leverage the best real-time control capabilities of several actuators and all the benefits of the EtherCAT communnication protocol. Therefore, contributions to this package are wholeheartedly welcome! Please adhere to the [contributor covenant](docs/code_of_conduct.md) while making contributions to this package. Strict actions will be taken against deviants.
+
+*EtherCAT ROS Configurator uses the EtherCAT master generation and handling capabilities of the EtherCAT Device Configurator package. EtherCAT ROS Configurator is in no way involved with or supported by the creators of EtherCAT Device Configurator.*
