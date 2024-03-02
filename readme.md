@@ -85,7 +85,7 @@ git clone https://github.com/leggedrobotics/ethercat_sdk_master.git
 The specific version of the package used while testing can be found at [ethercat_sdk_master](https://github.com/leggedrobotics/ethercat_sdk_master/tree/6b420bc1785cf26324aab62c79347b2a6e07924d). At the time of writing this readme, the latest version of the package should work, if it fails, checkout the specific commit hash in the link after cloning the repository.
 
 ### EtherCAT Motor Messages
-The [EtherCAT Motor Messages]() package provides a set of ROS messages for EtherCAT motor controllers. Add the package to your workspace by running the following commands:
+The [EtherCAT Motor Messages](https://github.com/ethz-msrl/ethercat_motor_msgs) package provides a set of ROS messages for EtherCAT motor controllers. Add the package to your workspace by running the following commands:
 ```bash
 cd /path/to/your/catkin/workspace/src
 git clone <link to the github page for ethercat_motor_msgs>
