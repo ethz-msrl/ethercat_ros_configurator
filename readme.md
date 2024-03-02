@@ -45,7 +45,7 @@ The following packages are required to be installed in your system in order to u
 - [ethercat_sdk_master](https://github.com/leggedrobotics/ethercat_sdk_master/tree/6b420bc1785cf26324aab62c79347b2a6e07924d)
 - [soem_interface](https://github.com/leggedrobotics/soem_interface/tree/7b7bed29d8dfe1d0ef17c8e42a4aab07b6b393df)
 - [message_logger](https://github.com/leggedrobotics/message_logger/tree/bdb867e57059f21d22f9454f6910920bfe5caac2)
-- [ethercat_motor_msgs](https://github.com/Ophthorobotics/ethercat_motor_msgs)
+- [ethercat_motor_msgs](https://github.com/ethz-msrl/ethercat_motor_msgs)
 - yaml-cpp ([version 0.6](https://packages.ubuntu.com/focal/libyaml-cpp0.6) ships with Ubuntu 20.04 LTS)
 
 ### ROS Noetic
@@ -106,7 +106,7 @@ The following device SDKs are supported:
 
 | SDK Name    | URL    | Type    | Description    | License | Registration Name |
 |---------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
-| Nanotec EtherCAT SDK | https://github.com/Ophthorobotics/nanotec_ethercat_sdk | Motor Controller | Designed for Nanotec C5E-1-21 motor controller | BSD-3-Clause | `Nanotec` |
+| Nanotec EtherCAT SDK | https://github.com/ethz-msrl/nanotec_ethercat_sdk | Motor Controller | Designed for Nanotec C5E-1-21 motor controller | BSD-3-Clause | `Nanotec` |
 | Maxon EPOS EtherCAT SDK | https://github.com/leggedrobotics/maxon_epos_ethercat_sdk | Motor Controller | Designed for Maxon EPOS4 motor controller | BSD-3-Clause | `Maxon` |
 
 This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace. Note that the package only compiles the class object for a device if its SDK is found by cmake. Check out the warning messages in the build log to see which SDKs were found by cmake. For example: if the Nanotec and the Maxon SDKs are found, the following is the output of the build log:
