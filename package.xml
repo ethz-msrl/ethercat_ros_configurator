@@ -3,12 +3,12 @@
   <name>ethercat_ros_configurator</name>
   <version>1.0.0</version>
   <description>The ethercat_ros_configurator package</description>
-  <maintainer email="">Neelaksh Singh</maintainer>
-  <maintainer email="">Claas Ehmke</maintainer>
-  <maintainer email="">Jasan Zughaibi</maintainer>
+  <maintainer email="sneelaksh@ethz.ch">Neelaksh Singh</maintainer>
+  <maintainer email="cehmke@ethz.ch">Claas Ehmke</maintainer>
+  <maintainer email="zjasan@ethz.ch">Jasan Zughaibi</maintainer>
   <license>BSD-3-Clause</license>
-  <url type="website">https://github.com/Ophthorobotics/ethercat_ros_configurator</url>
-  <author email="">Neelaksh Singh</author>
+  <url type="website">https://github.com/ethz-msrl/ethercat_ros_configurator</url>
+  <author email="sneelaksh@ethz.ch">Neelaksh Singh</author>
   <depend>roscpp</depend>
   <buildtool_depend>catkin</buildtool_depend>
 
