@@ -44,6 +44,7 @@ import pickle
 import numpy as np
 import scipy.signal as signal
 import matplotlib.pyplot as plt
+import os
 
 from ethercat_motor_msgs.msg import MotorCtrlMessage
 from ethercat_motor_msgs.msg import MotorStatusMessage
@@ -184,9 +185,15 @@ class TestReferenceGenerator:
         self._current_reading_number += 1
     
     def save_data_to_file(self):
+
         # Generate the filename with the current date and time prefix
         filename = self.save_path + f"{self.name}_{self._data_prefix}_data.pkl"
 
+        #check if path exists
+        if not os.path.exists(self.save_path):
+            print(f"Creating directory {self.save_path}")
+            os.makedirs(self.save_path)
+            
         # Create a dictionary to store the data
         data = {
             "commands":{
