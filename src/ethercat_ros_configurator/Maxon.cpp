@@ -96,7 +96,6 @@ void EthercatDeviceRos<maxon::Maxon>::worker(){
             reading_msg_.analogInput = reading.getAnalogInputRaw();
             reading_msg_.busVoltage = reading.getBusVoltageRaw();
             reading_msg_.actualTorque   = reading.getActualCurrent(); // see txPDO defn in maxon's SDK
-            reading_msg_.errorCode = reading.getErrorCode();
             reading_pub_ptr_->publish(reading_msg_);
 
 
