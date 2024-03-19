@@ -66,12 +66,14 @@ catkin_package(
     ${PROJECT_NAME}
   CATKIN_DEPENDS
     ${PACKAGE_DEPENDENCIES}
+    ethercat_motor_msgs
 )
 
 include_directories(
   include
   ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
   ${nanotec_ethercat_sdk_INCLUDE_DIRS}
+  ${ethercat_motor_msgs_INCLUDE_DIRS}
 )
 
 add_library(${PROJECT_NAME}
@@ -82,6 +84,7 @@ target_link_libraries(
   ${PROJECT_NAME}
   ${maxon_epos_ethercat_sdk_LIBRARIES}
   ${nanotec_ethercat_sdk_LIBRARIES}
+  ${ethercat_motor_msgs_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   stdc++fs
 )
@@ -95,12 +98,14 @@ add_dependencies(
   ${PROJECT_NAME}
   ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
   ${nanotec_ethercat_sdk_EXPORTED_TARGETS}
+  ${ethercat_motor_msgs_EXPORTED_TARGETS}
 )
 target_link_libraries(
   ethercat_ros_node
   ${PROJECT_NAME}
   ${maxon_epos_ethercat_sdk_LIBRARIES}
   ${nanotec_ethercat_sdk_LIBRARIES}
+  ${ethercat_motor_msgs_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   -pthread
   stdc++fs

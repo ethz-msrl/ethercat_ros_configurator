@@ -9,10 +9,11 @@
   <license>BSD-3-Clause</license>
   <url type="website">https://github.com/ethz-msrl/ethercat_ros_configurator</url>
   <author email="sneelaksh@ethz.ch">Neelaksh Singh</author>
-  <depend>roscpp</depend>
+  <build_depend>roscpp</build_depend>
   <buildtool_depend>catkin</buildtool_depend>
 
   <build_depend>ethercat_motor_msgs</build_depend>
+  <exec_depend>ethercat_motor_msgs</exec_depend>
   <!-->
       Optional dependencies.
       Any single drive sdk or any combination of sdks may be used.
