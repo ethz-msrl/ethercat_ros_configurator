@@ -72,12 +72,49 @@ struct EthercatSlaveEntry
 class EthercatDeviceRosBase{
     public:
         virtual ~EthercatDeviceRosBase() = default;
+        /**
+         * @brief This function starts the worker thread for the device. The
+         * worker thread is responsible for the main control loop of the device.
+         * All the message handling and state updates are done in this thread.
+         */
         virtual void startWorkerThread() = 0;
+        /**
+         * @brief This function joins the worker thread. It is called when the
+         * main program is shutting down and the worker thread needs to be stopped.
+         */
         virtual void joinWorkerThread() = 0;
+        /**
+         * @brief This function returns the slave object pointer. Required by the
+         * configurator program to access the startup and shutdown routines of the driver.
+         * @return shared_ptr on slave object
+         */
         virtual std::shared_ptr<ecat_master::EthercatDevice> getSlaveObjPtr() const = 0;
+        /**
+         * @brief A utility function to return the name of the device.
+         * 
+         * @return std::string 
+         */
         virtual std::string getName() const = 0;
+        /**
+         * @brief Called whenever the main thread is aborted. Can be used to implement
+         * specific abort routines for the device.
+         * 
+         */
         virtual void abort() = 0;
+        /**
+         * @brief This function is called to create the device object. It is a pure virtual
+         * function and needs to be implemented by the derived classes. The idea is that
+         * the device driver implements specific routines to creae the device object and may
+         * require certain imput parameters from config files or other means. This function
+         * either implements these routines or calls the responssible function from the driver
+         * program which finally calls the device constructor.
+         */
         virtual void createDevice() = 0;
+        /**
+         * @brief Get the enum which specifies the type of device. For eg: Motor Controller.
+         * 
+         * @return EthercatDeviceClass 
+         */
         virtual EthercatDeviceClass getDeviceClass() = 0;
 };
 
