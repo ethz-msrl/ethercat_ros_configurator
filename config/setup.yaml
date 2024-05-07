@@ -7,7 +7,7 @@ ethercat_devices:
   - type:               Xeryon # Registration Name of the device SDK
     name:               Xeryon_Motor_1 # Name of the device, should be unique for each device. Used for ROS topics.
     configuration_file: device_configurations/xeryon.yaml # Path to the configuration file for the device
-    ethercat_bus:       enx782d7e11f430 # eth0 usually
+    ethercat_bus:       enx782d7e117ff5 # eth0 usually
     ethercat_address:   1 # Address of the device on the bus, should be unique for each device
     thread_frequency:   100 # in Hz
     initial_mode_of_operation: 8 # Check mode maps in the SDK docs or device .cpp file
