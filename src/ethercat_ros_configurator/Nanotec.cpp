@@ -129,7 +129,8 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
             cmd.setVelocityOffsetRaw(last_command_msg_ptr_->velocityOffset);
             lock.unlock();
 
-            device_ptr_->stageCommand(cmd);
+          
+            device_ptr_->stageCommand(cmd); // update command for update_write
         }
         else
         {

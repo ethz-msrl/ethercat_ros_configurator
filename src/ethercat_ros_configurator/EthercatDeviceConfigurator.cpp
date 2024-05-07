@@ -115,6 +115,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
     //Load into yaml
     YAML::Node node = YAML::LoadFile(path);
 
+
     //Ethercat master configuration
     if(node["ethercat_master"])
     {
@@ -149,6 +150,7 @@ void EthercatDeviceConfigurator::parseFile(std::string path)
     m_nh = std::make_shared<ros::NodeHandle>(m_ros_namespace);
 
     //Check if node is ethercat_devices
+    MELO_INFO("[EthercatDeviceConfigurator] Parsing ethercat_devices")
     if(node["ethercat_devices"])
     {
         //Get all children

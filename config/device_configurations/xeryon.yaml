@@ -1,0 +1,45 @@
+# Example config file for Xeryon Drives
+Xeryon:
+  config_run_sdo_verify_timeout: 50000
+  print_debug_messages: true
+  use_raw_commands: false
+  drive_state_change_min_timeout: 2000
+  drive_state_change_max_timeout: 1000000
+  min_number_of_successful_target_state_readings: 50
+
+Reading:
+  force_append_equal_error: true
+  force_append_equal_fault: false
+  error_storage_capacity: 100
+  fault_storage_capacity: 100
+
+Hardware:
+  mode_of_operation:
+    - StandardMode                              # No other methods possible
+  max_speed: 500000                             # um/s 
+  speed_index_search: 5000                      # um/s
+  max_acceleration: 65000                       # mm/s^2
+  max_deceleration: 65000                       # mm/s^2
+  open_loop:
+    phase_offset: 16383                         # 0-65535
+    amplitude: 65535                            # 0-65535
+  tuning_parameter:
+    frequency_excitation_zone_1: 173000         # Hz dont touch
+    frequency_excitation_zone_2: 169000         # Hz dont touch
+    proportional_gain_zone_1: 40                # dont touch
+    proportional_gain_zone_2: 10                # dont touch
+    width_zone_1: 100                           # dont touch
+    width_zone_2: 1000                          # dont touch
+    frequency_control: 100000                   # Hz dont touch
+    use_amplitude: true                         # dont touch
+    follow_error_window: 10000                  # encoder units
+    following_error_window_index_search: 3000   # encoder units
+    position_tolerance_1: 3                     # encoder units
+    position_tolerance_2: 5                     # encoder units
+    timeout_1: 500                              # ms
+    timeout_2: 60                               # s
+    timeout_3: 1000                             # ms
+    delay_position_reached_flag: 20             # ms
+    deatime: 0                                  # ms
+    integration_factor: 5                       # dont touch
+    

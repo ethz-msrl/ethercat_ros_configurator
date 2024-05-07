@@ -23,6 +23,7 @@ find_package(ethercat_motor_msgs REQUIRED)
 
 find_package(maxon_epos_ethercat_sdk )
 find_package(nanotec_ethercat_sdk )
+find_package(xeryon_ethercat_sdk )
 
 set(SRC_FILES
   # include files
@@ -55,6 +56,17 @@ if(nanotec_ethercat_sdk_FOUND)
     src/ethercat_ros_configurator/Nanotec.cpp)
 endif()
 
+if(xeryon_ethercat_sdk_FOUND)
+  add_definitions(-D_XERYON_FOUND_)
+  set(PACKAGE_DEPENDENCIES
+    ${PACKAGE_DEPENDENCIES}
+    xeryon_ethercat_sdk
+  )
+  set(SRC_FILES
+    ${SRC_FILES}
+    src/ethercat_ros_configurator/Xeryon.cpp)
+endif()
+
 foreach(sdk ${PACKAGE_DEPENDENCIES})
   message("Found EtherCAT device sdk: " ${sdk})
 endforeach()
@@ -73,6 +85,7 @@ include_directories(
   include
   ${maxon_epos_ethercat_sdk_INCLUDE_DIRS}
   ${nanotec_ethercat_sdk_INCLUDE_DIRS}
+  ${xeryon_ethercat_sdk_INCLUDE_DIRS}
   ${ethercat_motor_msgs_INCLUDE_DIRS}
 )
 
@@ -84,6 +97,7 @@ target_link_libraries(
   ${PROJECT_NAME}
   ${maxon_epos_ethercat_sdk_LIBRARIES}
   ${nanotec_ethercat_sdk_LIBRARIES}
+  ${xeryon_ethercat_sdk_LIBRARIES}
   ${ethercat_motor_msgs_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   stdc++fs
@@ -98,6 +112,7 @@ add_dependencies(
   ${PROJECT_NAME}
   ${maxon_epos_ethercat_sdk_EXPORTED_TARGETS}
   ${nanotec_ethercat_sdk_EXPORTED_TARGETS}
+  ${xeryon_ethercat_sdk_EXPORTED_TARGETS}
   ${ethercat_motor_msgs_EXPORTED_TARGETS}
 )
 target_link_libraries(
@@ -105,6 +120,7 @@ target_link_libraries(
   ${PROJECT_NAME}
   ${maxon_epos_ethercat_sdk_LIBRARIES}
   ${nanotec_ethercat_sdk_LIBRARIES}
+  ${xeryon_ethercat_sdk_LIBRARIES}
   ${ethercat_motor_msgs_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   -pthread

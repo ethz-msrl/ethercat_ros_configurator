@@ -1,0 +1,6 @@
+<launch>
+    <arg name="config_file" default="$(find ethercat_ros_configurator)/config/setup.yaml"/>
+
+    <node name="ethercat_ros_node" pkg="ethercat_ros_configurator" type="ethercat_ros_node" args="$(arg config_file)" output="screen">
+    </node>
+</launch>
