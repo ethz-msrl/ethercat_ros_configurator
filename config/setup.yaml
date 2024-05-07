@@ -6,24 +6,18 @@ ethercat_master:
 ethercat_devices:
   - type:               Nanotec # Registration Name of the device SDK
     name:               Nanotec_Motor_1 # Name of the device, should be unique for each device. Used for ROS topics.
-    configuration_file: device_configurations/nanotec.yaml # Path to the configuration file for the device
-    ethercat_bus:       eth0 # eth0 usually
+    configuration_file: device_configurations/nanotec_linear.yaml # Path to the configuration file for the device
+    ethercat_bus:       enx782d7e117ff5 # eth0 usually
     ethercat_address:   1 # Address of the device on the bus, should be unique for each device
     thread_frequency:   100 # in Hz
     initial_mode_of_operation: 8 # Check mode maps in the SDK docs or device .cpp file
 
   - type:               Nanotec
     name:               Nanotec_Motor_2
-    configuration_file: device_configurations/nanotec.yaml
-    ethercat_bus:       eth0
+    configuration_file: device_configurations/nanotec_rotary.yaml
+    ethercat_bus:       enx782d7e117ff5
     ethercat_address:   2
     thread_frequency:   100
     initial_mode_of_operation: 8
   
-  - type:               Maxon
-    name:               Maxon_Motor_1
-    configuration_file: device_configurations/maxon.yaml
-    ethercat_bus:       eth0
-    ethercat_address:   3
-    thread_frequency:   100
-    initial_mode_of_operation: 8
+
