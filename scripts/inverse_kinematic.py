@@ -167,7 +167,7 @@ def callback(data):
     motorMsg.a3TargetPosition = round(motorPositions[2],3)
 
     rospy.loginfo("a1 Target Position X(mm) %f", motorMsg.a1TargetPosition)
-    rospy.loginfo("a2 Effector Target Position Y(rad) %f", motorMsg.a2TargetPosition)
+    rospy.loginfo("a2 Effector Target Position Y(deg) %f", motorMsg.a2TargetPosition*180/np.pi)
     rospy.loginfo("a3 Effector Target Position Z(mm) %f", motorMsg.a3TargetPosition)
 
         # Add another check to make sure hardware requirements are met.

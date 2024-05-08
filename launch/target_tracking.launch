@@ -5,9 +5,9 @@
     <!--    This launch files first set-ups the entire system by configurating this system according the setup.yaml which homes the system
             Afterwards, the system begins the inverse kinematic node and motor_msg_conversion node-->
 
+    <arg name="config_file" default="$(find ethercat_ros_configurator)/config/setup.yaml"/>
 
-    <node name="calibration" pkg="ethercat_ros_configurator" type="test_reference_generator.py" output="screen">
-        <rosparam file="$(find ethercat_ros_configurator)/config/setup.yaml" command="load"/>
+    <node name="ethercat_ros_node" pkg="ethercat_ros_configurator" type="ethercat_ros_node" args="$(arg config_file)" output="screen">
     </node>
 
     <node name = "inverse_kinematic" pkg = "ethercat_ros_configurator" type = "inverse_kinematic.py" output = "screen">

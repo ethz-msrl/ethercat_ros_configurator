@@ -18,17 +18,28 @@ Hardware:
   pole_pairs: 50
   max_motor_current_mA: 3000
   rated_current_mA: 2500
-  max_motor_speed: 200
+  max_motor_speed: 25
   max_current_percentage: 1000 # percent value * 10
   i2t_max_duration_of_peak_ms: 100 # 100 is recommended
   clock_direction_multiplier: 16 # 128 = quarter step/pulse (800 steps/rev), 512 = normal step/pulse (200 steps/rev)
   clock_direction_divider: 1
+
   limit_switch_negative_en: false 
   limit_switch_positive_en: true
   limit_switch_homing_en: false
-  limit_switch_negative_function_inverted: true 
+
+  limit_switch_negative_function_inverted: false 
   limit_switch_positive_function_inverted: true 
-  limit_switch_homing_function_inverted: true 
+  limit_switch_homing_function_inverted: false 
+
+  # Software limit indicates the range motor can move
+  software_position_limit_min: -100000      # -300
+  software_position_limit_max: 100000       # 2105
+  # Position range limit indicates encoder value range per rotation
+  position_range_limit_min: -100000
+  position_range_limit_max: 100000
+  gear_ratio_motor_revolutions: 18
+  gear_ratio_shaft_revolutions: 1
 
   # position_unit: 267653120  # 0xFF41000 for tenths of a degree, 3600 = 1 full mechanical rev
   # velocity_unit: 11814656 # 0x00B44700 for rpm
@@ -39,10 +50,10 @@ AutoSetup:
 
 Homing:
   homing_en: true
-  home_offset: 0 #3600 * (210/360) * 18              # 3600 * (210) * 18 (3600 per 1 degrees, * 210 for home and then 18:1 gear reduction)
+  home_offset: 2090              # 3600 * (210) * 18 (3600 per 1 degrees, * 210 for home and then 18:1 gear reduction)
   homing_method: 18
   homing_speed_zero_search: 10 #5deg/s
-  homing_speed_switch_search: 10 #5deg/s
+  homing_speed_switch_search: 5 #5deg/s
   homing_acceleration: 100
   minimum_current_for_block_detection_mA: 1200
   period_of_blocking_ms: 200

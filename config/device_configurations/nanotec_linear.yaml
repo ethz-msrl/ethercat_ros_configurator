@@ -29,6 +29,14 @@ Hardware:
   limit_switch_negative_function_inverted: false 
   limit_switch_positive_function_inverted: false 
   limit_switch_homing_function_inverted: false 
+
+  software_position_limit_min: -100000
+  software_position_limit_max: 100000
+  position_range_limit_min: -100000
+  position_range_limit_max: 100000
+  gear_ratio_motor_revolutions: 1
+  gear_ratio_shaft_revolutions: 1
+  
   # position_unit: 267653120  # 0xFF41000 for tenths of a degree, 3600 = 1 full mechanical rev
   # velocity_unit: 11814656 # 0x00B44700 for rpm
 

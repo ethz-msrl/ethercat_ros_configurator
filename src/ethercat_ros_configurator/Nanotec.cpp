@@ -122,6 +122,7 @@ void EthercatDeviceRos<nanotec::Nanotec>::worker() {
             cmd.setModeOfOperation(NanotecUtils::getModeOfOperation(last_command_msg_ptr_->operationMode));
             lock.lock();
             cmd.setTargetPositionRaw(last_command_msg_ptr_->targetPosition);
+            //MELO_INFO("TARGET POS: %d", last_command_msg_ptr_->targetPosition);
             cmd.setTargetVelocityRaw(last_command_msg_ptr_->targetVelocity);
             cmd.setTargetTorqueRaw(last_command_msg_ptr_->targetTorque);
             cmd.setPositionOffsetRaw(last_command_msg_ptr_->positionOffset);

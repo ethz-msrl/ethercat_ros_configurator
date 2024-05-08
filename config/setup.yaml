@@ -20,5 +20,10 @@ ethercat_devices:
     thread_frequency:   100
     initial_mode_of_operation: 8
   
-
->>>>>>> main
+  # - type:               Xeryon
+  #   name:               Xeryon_Motor_1
+  #   configuration_file: device_configurations/xeryon.yaml
+  #   ethercat_bus:       enx782d7e117ff5
+  #   ethercat_address:   3
+  #   thread_frequency:   100
+  #   initial_mode_of_operation: 1

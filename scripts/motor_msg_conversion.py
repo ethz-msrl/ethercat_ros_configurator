@@ -20,7 +20,7 @@ from ethercat_motor_msgs.msg import MotorCtrlMessage
     #   3600 = 1 full mechanical rev
 
 a1_conversion = 1/2                 # 1 rotation lead screw : 2 mm travel
-a2_conversion = 1/np.pi * 18        # 1 rotaton = 2*pi rad and 18:1 Gear Reduction (18 stepper rotation / platform rotation)   
+a2_conversion = 1/(2*np.pi)         # 1 rotaton = 2*pi rad and 18:1 Gear Reduction (18 stepper rotation / platform rotation)   
 
 motor_ctrl_per_rotation = 3600      # Controller Parameter: 3600 = 1 full mechanical revolution
 
@@ -40,9 +40,6 @@ def callback(data):
     a2TargetPosition = data.a2TargetPosition    #   [rad]
     a3TargetPosition = data.a3TargetPosition    #   [mm]
 
-    rospy.loginfo(a1TargetPosition)
-    rospy.loginfo(a2TargetPosition)
-
     motor_ctrl_1 = MotorCtrlMessage()
     motor_ctrl_2 = MotorCtrlMessage()
 
@@ -52,8 +49,8 @@ def callback(data):
     motor_ctrl_1.operationMode = MotorCtrlMessage.NANOTEC_OPERATION_MODE_CYCLIC_SYNCHRONOUS_POSITION
     motor_ctrl_2.operationMode = MotorCtrlMessage.NANOTEC_OPERATION_MODE_CYCLIC_SYNCHRONOUS_POSITION
 
-    rospy.loginfo(motor_ctrl_1.targetPosition)
-    rospy.loginfo(motor_ctrl_2.targetPosition)
+    rospy.loginfo("a1 motor command: %d", motor_ctrl_1.targetPosition)
+    rospy.loginfo("a2 motor command: %d", motor_ctrl_2.targetPosition)
 
 
     # convert a1TargetPosition to Stepper Rotations
