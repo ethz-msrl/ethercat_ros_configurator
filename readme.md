@@ -145,8 +145,11 @@ sudo apt-get install libyaml-cpp0.6
 
 ## Step 2: Install Device SDKs
 
-Several supported device SDKs are available for use with this package. The device SDKs are built on top of the `ethercat_sdk_master` package. The device SDKs are available as separate packages and can be installed by following the instructions in the respective package's readme. Installing them usually just boils down to cloning the respective device SDK's repository and installing any dependencies mentioned in their installation instructions. Make sure that the device SDKs can be found by the cmake [`find_package()`](https://cmake.org/cmake/help/latest/command/find_package.html#command:find_package) command in `CMakeLists.txt`.
+Several supported device SDKs are available for use with this package. The device SDKs are built on top of the `ethercat_sdk_master` package. The device SDKs are available as separate packages and can be installed by following the instructions in the respective package's readme. Installing them usually just boils down to cloning the respective device SDK's repository and installing any dependencies mentioned in their installation instructions. 
 
+**N.B.: some dependencies mentionned are already installed in Step 1, in which case ignore the instruction to clone these in the SDK repo.**
+
+Make sure that the device SDKs can be found by the cmake [`find_package()`](https://cmake.org/cmake/help/latest/command/find_package.html#command:find_package) command in `CMakeLists.txt`.
 
 ### Supported Device SDKs
 
@@ -157,7 +160,33 @@ The following device SDKs are supported:
 | Nanotec EtherCAT SDK | https://github.com/ethz-msrl/nanotec_ethercat_sdk | Motor Controller | Designed for Nanotec C5E-1-21 motor controller | BSD-3-Clause | `Nanotec` |
 | Maxon EPOS EtherCAT SDK | https://github.com/leggedrobotics/maxon_epos_ethercat_sdk | Motor Controller | Designed for Maxon EPOS4 motor controller | BSD-3-Clause | `Maxon` |
 
-This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace. Note that the package only compiles the class object for a device if its SDK is found by cmake. Check out the warning messages in the build log to see which SDKs were found by cmake. For example: if the Nanotec and the Maxon SDKs are found, the following is the output of the build log:
+This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace.
+
+## Step 3: Install EtherCAT ROS Configurator
+Finally, clone this repository into your catkin workspace and build the workspace. You can do this by running the following commands:
+
+```bash
+cd /path/to/your/catkin/workspace/src
+```
+
+```bash
+git clone git@github.com:ethz-msrl/ethercat_ros_configurator.git
+```
+
+```bash
+cd ..
+```
+
+```bash
+catkin build ethercat_ros_configurator
+```
+
+```bash
+source devel/setup.bash
+```
+
+Note that the device SDK packages only compiles the class object for a device if its SDK is found by cmake. Check out the warning messages in the build log to see which SDKs were found by cmake. For example: if the Nanotec and the Maxon SDKs are found, the following is the output of the build log:
+
 ```bash
 Starting  >>> ethercat_ros_configurator                                                                                                                                        
 _______________________________________________________________________________________________________________________________________________________________________________
@@ -171,14 +200,6 @@ ________________________________________________________________________________
 
 ```
 
-## Step 3: Install EtherCAT ROS Configurator
-Finally, clone this repository into your catkin workspace and build the workspace. You can do this by running the following commands:
-```bash
-cd /path/to/your/catkin/workspace/src
-git clone <link to this repo>
-cd ..
-catkin build
-```
 
 # Usage Instructions
 Before following the instructions below, make sure you have built your catkin workspace alongwith the SDKs of all the EtherCAT devices you intend to use. The following steps will guide you through the process of using the package to configure your EtherCAT network. The EtherCAT ros configurator prepares a network of devices through the `config/setup.yaml` file. An example of the setup file for an EtherCAT bus with 2 Nanotec C5E-1-21 motor drivers followed by a Maxon EPOS4 driver is given below:
