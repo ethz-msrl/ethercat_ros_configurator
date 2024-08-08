@@ -28,7 +28,6 @@ This package acts as a configurator for EtherCAT device SDKs built on top of the
     - [Root Access Requirement ](#root-access-requirement-)
 - [API Documentation \& Contributing To The Project](#api-documentation--contributing-to-the-project)
 
-
 # Installation
 
 This package is supposed to be used as a ROS package for a catkin work space. Therefore, knowledge of the catkin build system and workspaces is assumed for the rest of the sections. If you are not familiar with catkin, please refer to the [ROS wiki](http://wiki.ros.org/catkin) and [Catkin Tutorials](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) for more information. Note that the package is tested under the following conditions:
@@ -49,6 +48,7 @@ The following packages are required to be installed in your system in order to u
 - yaml-cpp ([version 0.6](https://packages.ubuntu.com/focal/libyaml-cpp0.6) ships with Ubuntu 20.04 LTS)
 
 ### ROS Noetic
+
 For installing ROS Noetic in Ubuntu 20.04 LTS, please refer to the [ROS Noetic Installation Guide](http://wiki.ros.org/noetic/Installation/Ubuntu). The packages have not been tested for ROS installations in other environments like WSL, Raspberry Pi, etc, therefore, user discretion is advised. Feel free to open an issue if you encounter any problems with other distributions, but receiving support for other distributions is not guaranteed.
 ### Catkin Tools
 To use the `catkin build` command, you need to install the `catkin_tools` package. You can install it by running the following command:
@@ -60,48 +60,96 @@ For more information and alternative installation methods, please refer to the [
 ### Message Logger
 
 The message logger package provides a simple way to log messages to the console and to a file. Add the package to your workspace by running the following commands:
+
 ```bash
 cd /path/to/your/catkin/workspace/src
+```
+
+```bash
 git clone https://github.com/leggedrobotics/message_logger.git
 ```
 
-For the specific version of the package used while testing alongwith the installation instructions, goto [message_logger](https://github.com/leggedrobotics/message_logger/tree/bdb867e57059f21d22f9454f6910920bfe5caac2). At the time of writing this readme, the latest version of the package should work, if it fails, checkout the specific commit hash in the link after cloning the repository.
- 
+```bash
+cd message_logger
+```
+
+```bash
+git checkout bdb867e
+```
+
+For the specific version of the package used while testing alongwith the installation instructions, goto [message_logger](https://github.com/leggedrobotics/message_logger/tree/bdb867e57059f21d22f9454f6910920bfe5caac2).
+
 ### SOEM Interface
+
 The SOEM Interface package provides a ROS wrapper for the [SOEM Library](https://github.com/OpenEtherCATsociety/SOEM.git). Add the package to your workspace by running the following commands:
+
 ```bash
 cd /path/to/your/catkin/workspace/src
+```
+
+```bash
 git clone https://github.com/leggedrobotics/soem_interface.git
 ```
+
+```bash
+cd soem_interface
+```
+
+```bash
+git checkout 7b7bed2
+```
+
 The specific version of the package used while testing can be found at [soem_interface](https://github.com/leggedrobotics/soem_interface/tree/7b7bed29d8dfe1d0ef17c8e42a4aab07b6b393df). At the time of writing this readme, the latest version of the package should work, if it fails, checkout the specific commit hash in the link after cloning the repository.
 
 ### EtherCAT SDK Master
+
 This package presents a nice base class for implementation of EtherCAT slave devices by providing high level EtherCAT functionalities over the [SOEM Library](https://github.com/OpenEtherCATsociety/SOEM.git). Add the package to your workspace by running the following commands:
+
 ```bash
 cd /path/to/your/catkin/workspace/src
+```
+
+```bash
 git clone https://github.com/leggedrobotics/ethercat_sdk_master.git
 ```
 
-The specific version of the package used while testing can be found at [ethercat_sdk_master](https://github.com/leggedrobotics/ethercat_sdk_master/tree/6b420bc1785cf26324aab62c79347b2a6e07924d). At the time of writing this readme, the latest version of the package should work, if it fails, checkout the specific commit hash in the link after cloning the repository.
+```bash
+cd ethercat_sdk_master
+```
+
+```bash
+git checkout 6b420bc
+```
+
+The specific version of the package used while testing can be found at [ethercat_sdk_master](https://github.com/leggedrobotics/ethercat_sdk_master/tree/6b420bc1785cf26324aab62c79347b2a6e07924d).
 
 ### EtherCAT Motor Messages
+
 The [EtherCAT Motor Messages](https://github.com/ethz-msrl/ethercat_motor_msgs) package provides a set of ROS messages for EtherCAT motor controllers. Add the package to your workspace by running the following commands:
+
 ```bash
 cd /path/to/your/catkin/workspace/src
-git clone <link to the github page for ethercat_motor_msgs>
+```
+
+```bash
+git clone https://github.com/ethz-msrl/ethercat_motor_msgs
 ```
 
 ### Yaml-CPP
+
 The package uses the yaml-cpp library for parsing the YAML configuration files. [Version 0.6](https://packages.ubuntu.com/focal/libyaml-cpp0.6) of the library is installed by default in Ubuntu 20.04 LTS. However, you should be able to install it by running the following command:
+
 ```bash
 sudo apt-get install libyaml-cpp0.6
 ```
 
 ## Step 2: Install Device SDKs
+
 Several supported device SDKs are available for use with this package. The device SDKs are built on top of the `ethercat_sdk_master` package. The device SDKs are available as separate packages and can be installed by following the instructions in the respective package's readme. Installing them usually just boils down to cloning the respective device SDK's repository and installing any dependencies mentioned in their installation instructions. Make sure that the device SDKs can be found by the cmake [`find_package()`](https://cmake.org/cmake/help/latest/command/find_package.html#command:find_package) command in `CMakeLists.txt`.
 
 
 ### Supported Device SDKs
+
 The following device SDKs are supported:
 
 | SDK Name    | URL    | Type    | Description    | License | Registration Name |
