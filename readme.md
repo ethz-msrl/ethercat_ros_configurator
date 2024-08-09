@@ -200,8 +200,8 @@ ________________________________________________________________________________
 
 ```
 
-
 # Usage Instructions
+
 Before following the instructions below, make sure you have built your catkin workspace alongwith the SDKs of all the EtherCAT devices you intend to use. The following steps will guide you through the process of using the package to configure your EtherCAT network. The EtherCAT ros configurator prepares a network of devices through the `config/setup.yaml` file. An example of the setup file for an EtherCAT bus with 2 Nanotec C5E-1-21 motor drivers followed by a Maxon EPOS4 driver is given below:
 ```yaml
 ethercat_master:
@@ -235,10 +235,12 @@ ethercat_devices:
     initial_mode_of_operation: 8
 ```
 
-### `ethercat_master` Section
+## `ethercat_master` Section
+
 The `ethercat_master` section contains the configuration for the EtherCAT master. The `time_step` parameter is the time step for the EtherCAT master in seconds. In the example YAML the master is configured to run at 500 Hz, the package has been tested at 1000 Hz (time step of 0.001 secs) too. The `update_rate_too_low_warn_threshold` parameter is the threshold time for the warning message when the update rate of the EtherCAT master is too low. The `ros_namespace` parameter is the namespace for the EtherCAT master. All the device topics will be published or subscribed to under this namespace.
 
-### `ethercat_devices` Section
+## `ethercat_devices` Section
+
 This section lists the devices connected to the EtherCAT network. Each device is represented as a dictionary with the following keys:
 - `type`: The type of the device. This should be the name of the device SDK package. It is the name by which the device class is registered in the `EthercatDeviceFactory`. Check the respective device SDK's documentation for the correct name, or refer to the "Registration Name" column in the table in [Supported Device SDKs](#supported-device-sdks) section.
 - `name`: The name of the device. This is the name by which the device will be referred to in the ROS topics and services. It should be unique for each device.
@@ -248,15 +250,18 @@ This section lists the devices connected to the EtherCAT network. Each device is
 - `thread_frequency`: The frequency at which the device's own worker thread should run. This is the frequency at which the device's command and feedback data is updated. The frequency should be in Hz.
 - `initial_mode_of_operation`: The initial mode of operation for the device. The mode of operation is a parameter specific to the device and should be documented in the respective device SDK's documentation. The mode of operation is the mode in which the device operates. The mode of operation can be changed through the ROS interface. The initial mode of operation should be set to the mode in which the device should start operating. The value of 8 in the example script corresponds to the "Cyclic Synchronous Position Mode" for both Nanotec C5E-1-21 and Maxon EPOS4 motor controllers.
 
-### Important Note On EtherCAT Address
+## Important Note On EtherCAT Address
+
 The address 0 is reserved for the EtherCAT master. The EtherCAT address value for all slaves is supposed to be in the range of 1 to 65535 (16 bits). Therefore, one master can support upto 65535 devices. Note that, addresses define which parameters get associated with which device. Addresses are always assigned in a way that the device closest to the master gets the smallest address, the next device gets the smallest address after that and so on. This means, that in the list of device dictionaries in the `ethercat_devices` section, the address value order of the devices should follow the physical wiring order (topological position) of the devices on the bus. Otherwise, you may end up assigning the wrong device class, and the wrong settings to the wrong device which may lead to failure or unexpected behavior. For example, if the address of the Maxon motor is changed to 2 while that of the 2nd Nanotec motor is changed to 3, then the master node will try to create a slave of type Maxon at address 2 for the 2nd Nanotec motor, which will lead to failure. Therefore, it is important to ensure that the address values are assigned according to the correct topological order.
 
-### Command and Feedback Data
+## Command and Feedback Data
+
 At the time of writing, the package is only configured for motor controllers. The package provides a simple way of updating the command and receiving the feedback data through ROS messages. The command and feedback data is updated asynchronously through the worker threads of the device classes. For each device, 2 ROS topics are created:
 - `/<ethercat_master_ros_namespace>/<device_name>/command`: The command topic for the device. The command topic is used to send commands to the device. The message type for the command topic is specific to the device and should be documented in the respective device SDK's documentation. For the currently supported motor controllers, it is `ethercat_motor_msgs::MotorCtrlMessage`. The user can send commands to this topic at any rate which updates a local buffer in the device class. The worker thread of the device class then updates the command data to the device at the frequency specified in the `thread_frequency` parameter in the `ethercat_devices` section of the setup file.
 - `/<ethercat_master_ros_namespace>/<device_name>/reading`: The feedback topic for the device. The feedback topic is used to receive feedback from the device. The message type for the feedback topic is specific to the device and should be documented in the respective device SDK's documentation. For the currently supported motor controllers, it is `ethercat_motor_msgs::MotorStatusMessage`. The device class updates the feedback data to this topic at the frequency specified in the `thread_frequency` parameter in the `ethercat_devices` section of the setup file.
 
-### Wiring The EtherCAT Network
+## Wiring The EtherCAT Network
+
 Check the [EtherCAT installation guide](https://www.ethercat.org/download/documents/ETG1600_V1i0i4_G_R_InstallationGuideline.pdf) for more details on setting up the physical connections between the devices and a ROS enabled PC.Please note a Ethernet port should be available on the ROS machine. A basic linear bus connection topoloy is achieved as follows: One ethernet wire is connected from the ROS machine's Ethernet port to the "input" EtherCAT port of the first device. Then the "output" EtherCAT port of the first device is connected to the "input" EtherCAT port of the second device and so on. This is continued until the last device is reached whose "output" port is left unconnected. The dangling "output" port is handled internally by the EtherCAT communication protocol. A sample diagram of such a connection topology is given below:
 
 <img src="images/Functional_Principal_hd_60fps_v4.gif?raw=true"/>
@@ -265,11 +270,38 @@ Check the [EtherCAT installation guide](https://www.ethercat.org/download/docume
 
 Note that the network might benefit from circular connection topologies because of one layer of redundancy against phyical connection faults. However, this would require two ports in the ROS machine to serve as a part of the same EtherCAT bus; however, this is not supported by the package at the time of writing.
 
-### Running The ROS Node
-After setting up the [`config/setup.yaml`](config/setup.yaml) file, you can run the ROS node by running the following command:
+## Usage
+
+### <span style="color:red">Root Access Requirement </span> 
+
+Please note that running the EtherCAT master node requires root privilages because of the low level access to the Ethernet port. One way to achieve this is to launch the node while logged in as root in the terminal. This will require sourcing the ROS environment variables in the root shell. Sourcing the ROS environment in root shell is not recommended. A better way to achieve this will be through implementing a [ethercat_grant](https://github.com/shadow-robot/ethercat_grant) like functionality in the package. This is not a feature of the package as of this release.
+
+### Running the ROS node
+
+After setting up the [`config/setup.yaml`](config/setup.yaml) file, you can run the ROS node as follows (assumes a ROS master is already running):
+
+(TO  TEST)
+
+```bash
+sudo -i
+```
+
+```bash
+cd <your_catkin_workspace>
+```
+
+```bash
+source /opt/ros/noetic/setup.bash
+```
+
+```bash
+source /devel/setup.bash
+```
+
 ```bash
 rosrun ethercat_ros_configurator ethercat_ros_node <path_to_config_file>
 ```
+
 Replace `<path_to_config_file>` with the path to the `config/setup.yaml` file. The path can either be absolute, or can be relative to the current bash working directory when launching the rosnode.
 
 To run the example script, use: 
@@ -278,10 +310,8 @@ To run the example script, use:
 roslaunch ethercat_ros_configurator test_reference.launch
 ```
 
-### <span style="color:red">Root Access Requirement </span> 
-Please note that running the EtherCAT master node requires root privilages because of the low level access to the Ethernet port. One way to achieve this is to launch the node while logged in as root in the terminal. This will require sourcing the ROS environment variables in the root shell. Sourcing the ROS environment in root shell is not recommended. A better way to achieve this will be through implementing a [ethercat_grant](https://github.com/shadow-robot/ethercat_grant) like functionality in the package. This is not a feature of the package as of this release.
-
 # API Documentation & Contributing To The Project
+
 Refer to the following url for detailed information on how to integrate a new device SDK with the package, and to understand important implementation details as a device SDK developer: [EtherCAT ROS Configurator API Documentation](docs/api.md).
 
 We aim to make EtherCAT devices more accessible to the open source robotics community since it allows to leverage the best real-time control capabilities of several actuators and all the benefits of the EtherCAT communnication protocol. Therefore, contributions to this package are wholeheartedly welcome! Please adhere to the [contributor covenant](docs/code_of_conduct.md) while making contributions to this package. Strict actions will be taken against deviants.
