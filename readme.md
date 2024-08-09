@@ -276,11 +276,13 @@ Note that the network might benefit from circular connection topologies because 
 
 Please note that running the EtherCAT master node requires root privilages because of the low level access to the Ethernet port. One way to achieve this is to launch the node while logged in as root in the terminal. This will require sourcing the ROS environment variables in the root shell. Sourcing the ROS environment in root shell is not recommended. A better way to achieve this will be through implementing a [ethercat_grant](https://github.com/shadow-robot/ethercat_grant) like functionality in the package. This is not a feature of the package as of this release.
 
+TODO: implement ethercat_grant.
+
 ### Running the ROS node
 
 After setting up the [`config/setup.yaml`](config/setup.yaml) file, you can run the ROS node as follows (assumes a ROS master is already running):
 
-(TO  TEST)
+(TO TEST)
 
 ```bash
 sudo -i
