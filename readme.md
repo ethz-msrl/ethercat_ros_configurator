@@ -297,7 +297,7 @@ source /opt/ros/noetic/setup.bash
 ```
 
 ```bash
-source /devel/setup.bash
+source devel/setup.bash
 ```
 
 ```bash
