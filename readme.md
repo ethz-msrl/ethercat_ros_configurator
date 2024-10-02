@@ -158,7 +158,7 @@ The following device SDKs are supported:
 | SDK Name    | URL    | Type    | Description    | License | Registration Name |
 |---------------- | --------------- | --------------- | --------------- | --------------- | --------------- |
 | Nanotec EtherCAT SDK | https://github.com/ethz-msrl/nanotec_ethercat_sdk | Motor Controller | Designed for Nanotec C5E-1-21 motor controller | BSD-3-Clause | `Nanotec` |
-| Maxon EPOS EtherCAT SDK | https://github.com/leggedrobotics/maxon_epos_ethercat_sdk | Motor Controller | Designed for Maxon EPOS4 motor controller | BSD-3-Clause | `Maxon` |
+| Maxon EPOS EtherCAT SDK | https://github.com/ethz-msrl/maxon_epos_ethercat_sdk | Motor Controller | Designed for Maxon EPOS4 motor controller | BSD-3-Clause | `Maxon` |
 
 This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace.
 
