@@ -2,6 +2,17 @@
 cmake_minimum_required(VERSION 3.0)
 project(ethercat_ros_configurator)
 
+# Set RPATH to include necessary library paths
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+# List of directories to include in RPATH
+list(APPEND CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+list(APPEND CMAKE_INSTALL_RPATH "/opt/ros/noetic/lib")
+list(APPEND CMAKE_INSTALL_RPATH "$ENV{HOME}/tesla_ws/devel/lib")
+
+
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     message(STATUS "Using ccache")
@@ -23,6 +34,7 @@ find_package(ethercat_motor_msgs REQUIRED)
 
 find_package(maxon_epos_ethercat_sdk )
 find_package(nanotec_ethercat_sdk )
+
 
 set(SRC_FILES
   # include files
@@ -100,6 +112,15 @@ add_dependencies(
   ${nanotec_ethercat_sdk_EXPORTED_TARGETS}
   ${ethercat_motor_msgs_EXPORTED_TARGETS}
 )
+
+# For CMake 3.13 and later
+target_link_options(ethercat_ros_node PRIVATE -Wl,--disable-new-dtags)
+
+# If using an older version of CMake, use set_target_properties instead
+set_target_properties(ethercat_ros_node PROPERTIES
+  LINK_FLAGS "-Wl,--disable-new-dtags"
+)
+
 target_link_libraries(
   ethercat_ros_node
   ${PROJECT_NAME}
