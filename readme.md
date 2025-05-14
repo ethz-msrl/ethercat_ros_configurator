@@ -160,9 +160,30 @@ The following device SDKs are supported:
 | Nanotec EtherCAT SDK | https://github.com/ethz-msrl/nanotec_ethercat_sdk | Motor Controller | Designed for Nanotec C5E-1-21 motor controller | BSD-3-Clause | `Nanotec` |
 | Maxon EPOS EtherCAT SDK | https://github.com/ethz-msrl/maxon_epos_ethercat_sdk | Motor Controller | Designed for Maxon EPOS4 motor controller | BSD-3-Clause | `Maxon` |
 
-This list will be updated as more device SDKs are added to the package. Follow the installation instructions in the respective device SDK's readme to add it to your catkin workspace.
+#### Maxon EPOS EtherCAT
 
-## Step 3: Install EtherCAT ROS Configurator
+To build the library from source, clone the latest version from this repository into your catkin workspace and compile the package:
+
+```bash
+cd catkin_workspace/src
+git clone https://github.com/ethz-msrl/maxon_epos_ethercat_sdk.git
+cd ../
+catkin build maxon_epos_ethercat_sdk
+```
+
+## Step 3: Install EtherCAT grant
+
+### <span style="color:red">Root Access Requirement </span> 
+
+Please note that running the EtherCAT master node requires root privilages because of the low level access to the Ethernet port. One way to achieve this is to launch the node while logged in as root in the terminal. This will require sourcing the ROS environment variables in the root shell. Sourcing the ROS environment in root shell is not recommended. A better way to achieve this will be through ethercat_grant.
+
+Install ethercat grant using:
+
+```bash
+sudo apt install ros-noetic-ethercat-grant
+```
+
+## Step 4: Install EtherCAT ROS Configurator
 Finally, clone this repository into your catkin workspace and build the workspace. You can do this by running the following commands:
 
 ```bash
@@ -272,17 +293,6 @@ Note that the network might benefit from circular connection topologies because 
 
 ## Usage
 
-### <span style="color:red">Root Access Requirement </span> 
-
-Please note that running the EtherCAT master node requires root privilages because of the low level access to the Ethernet port. One way to achieve this is to launch the node while logged in as root in the terminal. This will require sourcing the ROS environment variables in the root shell. Sourcing the ROS environment in root shell is not recommended. A better way to achieve this will be through ethercat_grant.
-
-Install ethercat grant using:
-
-```bash
-sudo apt install ros-noetic-ethercat-grant
-```
-
-
 ### Running the ROS node with root priviledge
 
 After setting up the [`config/setup.yaml`](config/setup.yaml) file, you can run the ROS node as follows (assumes a ROS master is already running):
@@ -313,9 +323,28 @@ Replace `<path_to_config_file>` with the path to the `config/setup.yaml` file. T
 
 ### Running with launch file and ethercat grant
 
+An example of launch file to run the node using the ethercat grant is available here:
+
 ```bash
 roslaunch ethercat_ros_configurator test_reference.launch
 ```
+
+To use the ethercat grant in a launch file, make sure to use the launch prefix as follows:
+
+```xml
+<launch>
+    <node 
+        pkg="ethercat_ros_configurator" 
+        type="ethercat_ros_node" 
+        name="ethercat_ros_node" 
+        output="screen"
+        args="/home/user_name/tesla_ws/src/ethercat_ros_configurator/config/setup.yaml"     
+        launch-prefix="ethercat_grant"> <!--Prefix to use the ethercat grant-->
+    </node>
+</launch>
+```
+
+Use the absolute path to the .yaml setup file (here an example where this repo is cloned in `tesla_ws` by a user `user_name`.
 
 # API Documentation & Contributing To The Project
 
