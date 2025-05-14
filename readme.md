@@ -2,32 +2,6 @@
 
 This package acts as a configurator for EtherCAT device SDKs built on top of the [ethercat_sdk_master](https://github.com/leggedrobotics/ethercat_sdk_master) package. This package provides a seamless software architecture to add new ethercat slave device classes and configure them with a ROS backend for easy integration and multhreading for asynchronous update of the command and feedback data through ROS messages. Furthermore, this package provides a simple way to configure an EtherCAT network with multiple slave devices through a single yaml configuration file.
 
-# Table of Contents
-
-- [EtherCAT ROS Configurator](#ethercat-ros-configurator)
-- [Table of Contents](#table-of-contents)
-- [Installation](#installation)
-  - [Step 1: Installing Dependencies](#step-1-installing-dependencies)
-    - [ROS Noetic](#ros-noetic)
-    - [Catkin Tools](#catkin-tools)
-    - [Message Logger](#message-logger)
-    - [SOEM Interface](#soem-interface)
-    - [EtherCAT SDK Master](#ethercat-sdk-master)
-    - [EtherCAT Motor Messages](#ethercat-motor-messages)
-    - [Yaml-CPP](#yaml-cpp)
-  - [Step 2: Install Device SDKs](#step-2-install-device-sdks)
-    - [Supported Device SDKs](#supported-device-sdks)
-  - [Step 3: Install EtherCAT ROS Configurator](#step-3-install-ethercat-ros-configurator)
-- [Usage Instructions](#usage-instructions)
-    - [`ethercat_master` Section](#ethercat_master-section)
-    - [`ethercat_devices` Section](#ethercat_devices-section)
-    - [Important Note On EtherCAT Address](#important-note-on-ethercat-address)
-    - [Command and Feedback Data](#command-and-feedback-data)
-    - [Wiring The EtherCAT Network](#wiring-the-ethercat-network)
-    - [Running The ROS Node](#running-the-ros-node)
-    - [Root Access Requirement ](#root-access-requirement-)
-- [API Documentation \& Contributing To The Project](#api-documentation--contributing-to-the-project)
-
 # Installation
 
 This package is supposed to be used as a ROS package for a catkin work space. Therefore, knowledge of the catkin build system and workspaces is assumed for the rest of the sections. If you are not familiar with catkin, please refer to the [ROS wiki](http://wiki.ros.org/catkin) and [Catkin Tutorials](http://wiki.ros.org/catkin/Tutorials/create_a_workspace) for more information. Note that the package is tested under the following conditions:
